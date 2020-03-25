@@ -11,152 +11,152 @@ import (
 	"time"
 )
 
-// Decimal ..
-type Decimal struct {
+// decimal ..
+type decimal struct {
 	value *big.Float
 }
 
-// NewInt create new big.Int object with default settings
-func NewInt(value int64) *big.Int {
+// newBigInt create new big.Int object with default settings
+func newBigInt(value int64) *big.Int {
 	return big.NewInt(value)
 }
 
-// NewFloat create new big.Float object with default settings
-func NewFloat(value float64) *big.Float {
+// newBigFloat create new big.Float object with default settings
+func newBigFloat(value float64) *big.Float {
 	return big.NewFloat(value).SetPrec(96) // to match c#'s decimal
 }
 
-// NewDecimal create a new decimal with float64
-func NewDecimal(value float64) *Decimal {
-	return &Decimal{
-		value: NewFloat(value),
+// newDecimal create a new decimal with float64
+func newDecimal(value float64) *decimal {
+	return &decimal{
+		value: newBigFloat(value),
 	}
 }
 
-// NewDecimalString create a new decimal with float64
-func NewDecimalString(value string) *Decimal {
+// newDecimalString create a new decimal with float64
+func newDecimalString(value string) *decimal {
 	ret, _, _ := big.ParseFloat(value, 10, 128, big.ToNearestEven)
-	return &Decimal{
+	return &decimal{
 		value: ret,
 	}
 }
 
-// NewDecimalInt64 create a new decimal with float64
-func NewDecimalInt64(value int64) *Decimal {
-	return NewDecimal(float64(value))
+// newDecimalInt64 create a new decimal with float64
+func newDecimalInt64(value int64) *decimal {
+	return newDecimal(float64(value))
 }
 
 // Copy ..
-func (m *Decimal) Copy() *Decimal {
-	ret := NewFloat(0)
-	return &Decimal{
+func (m *decimal) Copy() *decimal {
+	ret := newBigFloat(0)
+	return &decimal{
 		value: ret.Add(ret, m.value),
 	}
 }
 
 // Float ..
-func (m *Decimal) Float() *big.Float {
+func (m *decimal) Float() *big.Float {
 	return m.value
 }
 
 // AddFloat64 ..
-func (m *Decimal) AddFloat64(value float64) *Decimal {
-	ret := NewDecimal(0)
-	ret.value.Add(m.value, NewFloat(value))
+func (m *decimal) AddFloat64(value float64) *decimal {
+	ret := newDecimal(0)
+	ret.value.Add(m.value, newBigFloat(value))
 	return ret
 }
 
 // Add ..
-func (m *Decimal) Add(value *Decimal) *Decimal {
-	ret := NewDecimal(0)
+func (m *decimal) Add(value *decimal) *decimal {
+	ret := newDecimal(0)
 	ret.value.Add(m.value, value.value)
 	return ret
 }
 
 // Sub ..
-func (m *Decimal) Sub(value *Decimal) *Decimal {
-	ret := NewDecimal(0)
+func (m *decimal) Sub(value *decimal) *decimal {
+	ret := newDecimal(0)
 	ret.value.Sub(m.value, value.value)
 	return ret
 }
 
 // MulFloat64 ..
-func (m *Decimal) MulFloat64(value float64) *Decimal {
-	ret := NewDecimal(0)
-	ret.value.Mul(m.value, NewFloat((value)))
+func (m *decimal) MulFloat64(value float64) *decimal {
+	ret := newDecimal(0)
+	ret.value.Mul(m.value, newBigFloat((value)))
 	return ret
 }
 
 // MulFloat32 multiply a float32 value
-func (m *Decimal) MulFloat32(value float32) *Decimal {
-	ret := NewDecimal(0)
-	ret.value.Mul(m.value, NewFloat(float64(value)))
+func (m *decimal) MulFloat32(value float32) *decimal {
+	ret := newDecimal(0)
+	ret.value.Mul(m.value, newBigFloat(float64(value)))
 	return ret
 }
 
 // Mul multiply a decimal value
-func (m *Decimal) Mul(value *Decimal) *Decimal {
-	ret := NewDecimal(0)
+func (m *decimal) Mul(value *decimal) *decimal {
+	ret := newDecimal(0)
 	ret.value.Mul(m.value, value.value)
 	return ret
 }
 
 // DivFloat64 ..
-func (m *Decimal) DivFloat64(value float64) *Decimal {
-	ret := NewDecimal(0)
-	ret.value.Quo(m.value, NewFloat(value))
+func (m *decimal) DivFloat64(value float64) *decimal {
+	ret := newDecimal(0)
+	ret.value.Quo(m.value, newBigFloat(value))
 	return ret
 }
 
 // Div ..
-func (m *Decimal) Div(value *Decimal) *Decimal {
-	ret := NewDecimal(0)
+func (m *decimal) Div(value *decimal) *decimal {
+	ret := newDecimal(0)
 	ret.value.Quo(m.value, value.value)
 	return ret
 }
 
 // Floor ..
-func (m *Decimal) Floor() *Decimal {
-	ret, intVal := NewDecimal(0), NewInt(0)
+func (m *decimal) Floor() *decimal {
+	ret, intVal := newDecimal(0), newBigInt(0)
 	m.value.Int(intVal)
 	ret.value.SetInt(intVal)
 	return ret
 }
 
 // Round ..
-func (m *Decimal) Round(decimals int) *Decimal {
-	ret := NewDecimal(0)
-	pow10, intVal := NewFloat(math.Pow10(decimals)), NewInt(0)
+func (m *decimal) Round(decimals int) *decimal {
+	ret := newDecimal(0)
+	pow10, intVal := newBigFloat(math.Pow10(decimals)), newBigInt(0)
 	ret.value.Mul(m.value, pow10).Int(intVal)
 	ret.value.SetInt(intVal).Quo(ret.value, pow10)
 	return ret
 }
 
 // Int64 ..
-func (m *Decimal) Int64() int64 {
+func (m *decimal) Int64() int64 {
 	ret, _ := m.value.Int64()
 	return ret
 }
 
 // Float32 ..
-func (m *Decimal) Float32() float32 {
+func (m *decimal) Float32() float32 {
 	ret, _ := m.value.Float32()
 	return ret
 }
 
 // Float64 ..
-func (m *Decimal) Float64() float64 {
+func (m *decimal) Float64() float64 {
 	ret, _ := m.value.Float64()
 	return ret
 }
 
 // String ..
-func (m *Decimal) String() string {
+func (m *decimal) String() string {
 	return m.value.String()
 }
 
 // Debug ..
-func (m *Decimal) Debug() {
+func (m *decimal) Debug() {
 	s := fmt.Sprintf("value: %g; %s", m.value, m.value.String())
 	fmt.Println(s)
 }
@@ -227,13 +227,13 @@ const (
 var (
 	/// Regular expression object used for validating timecode.
 	validateTimecode *regexp.Regexp = regexp.MustCompile(SMPTEREGEXSTRING)
-	EPSILON          *Decimal       = NewDecimalString("0.00000000000000000000001")
+	EPSILON          *decimal       = newDecimalString("0.00000000000000000000001")
 )
 
 // TimeCode ...
 type TimeCode struct {
 	/// The private Timespan used to track absolute time for this instance.
-	absoluteTime *Decimal
+	absoluteTime *decimal
 
 	/// The frame rate for this instance.
 	frameRate SmpteFrameRate
@@ -382,11 +382,11 @@ func FromTimeCode(timeCode string, rate SmpteFrameRate) (*TimeCode, error) {
 
 // FromTime Initializes a new instance of the TimeCode struct using an absolute time value, and the SMPTE framerate.
 func FromTime(absoluteTime float64, rate SmpteFrameRate) (*TimeCode, error) {
-	return FromTimeDecimal(NewDecimal(absoluteTime), rate)
+	return FromTimeDecimal(newDecimal(absoluteTime), rate)
 }
 
 // FromTimeDecimal Initializes a new instance of the TimeCode struct using an absolute time value in <see cref="decimal"/> precision, and the SMPTE framerate.
-func FromTimeDecimal(absoluteTime *Decimal, rate SmpteFrameRate) (*TimeCode, error) {
+func FromTimeDecimal(absoluteTime *decimal, rate SmpteFrameRate) (*TimeCode, error) {
 	return &TimeCode{
 		frameRate:    rate,
 		absoluteTime: absoluteTime.Copy(),
@@ -701,34 +701,34 @@ func (m *TimeCode) TotalFrames() int64 {
 }
 
 //MaxValue Gets the maximum TimeCode value of a known frame rate. The Max value for Timecode.
-func MaxValue(frameRate SmpteFrameRate) *Decimal {
+func MaxValue(frameRate SmpteFrameRate) *decimal {
 	switch frameRate {
 	case Smpte2398:
-		return NewDecimalString("86486.358291666700000")
+		return newDecimalString("86486.358291666700000")
 
 	case Smpte24:
-		return NewDecimalString("86399.958333333300000")
+		return newDecimalString("86399.958333333300000")
 
 	case Smpte25:
-		return NewDecimalString("86399.960000000000000")
+		return newDecimalString("86399.960000000000000")
 
 	case Smpte2997Drop:
-		return NewDecimalString("86399.880233333300000")
+		return newDecimalString("86399.880233333300000")
 
 	case Smpte2997NonDrop:
-		return NewDecimalString("86486.366633333300000")
+		return newDecimalString("86486.366633333300000")
 
 	case Smpte30:
-		return NewDecimalString("86399.966666666700000")
+		return newDecimalString("86399.966666666700000")
 
 	default:
-		return NewDecimalString("86399")
+		return newDecimalString("86399")
 	}
 }
 
 //Sub Subtracts a specified TimeCode from another specified TimeCode.
 func Sub(t1, t2 *TimeCode) (*TimeCode, error) {
-	rate, time := t1.frameRate, NewDecimal(0)
+	rate, time := t1.frameRate, newDecimal(0)
 	time.Float().Sub(t1.absoluteTime.Float(), t2.absoluteTime.Float())
 	t3 := &TimeCode{
 		frameRate:    rate,
@@ -756,7 +756,7 @@ func NotEqual(t1, t2 *TimeCode) bool {
 
 // Add two specified TimeCode instances.
 func Add(t1, t2 *TimeCode) (*TimeCode, error) {
-	rate, time := t1.frameRate, NewDecimal(0)
+	rate, time := t1.frameRate, newDecimal(0)
 	time.Float().Add(t1.absoluteTime.Float(), t2.absoluteTime.Float())
 	t3 := &TimeCode{
 		frameRate:    rate,
@@ -1348,7 +1348,7 @@ func (m *TimeCode) String() string {
 */
 
 // smpte12mToAbsoluteTime Converts a SMPTE timecode to absolute time.
-func smpte12mToAbsoluteTime(timeCode string, rate SmpteFrameRate) (*Decimal, error) {
+func smpte12mToAbsoluteTime(timeCode string, rate SmpteFrameRate) (*decimal, error) {
 	switch rate {
 	case Smpte2398:
 		return smpte12M_23_98_ToAbsoluteTime(timeCode)
@@ -1464,7 +1464,7 @@ func formatTimeCodeString(days, hours, minutes, seconds, frames int32, dropFrame
 */
 
 // smpte12M_23_98_ToAbsoluteTime Converts to Absolute time from SMPTE 12M 23.98.
-func smpte12M_23_98_ToAbsoluteTime(timeCode string) (*Decimal, error) {
+func smpte12M_23_98_ToAbsoluteTime(timeCode string) (*decimal, error) {
 	days, hours, minutes, seconds, frames, err := parseTimecodeString(timeCode)
 	if err != nil {
 		return nil, err
@@ -1474,11 +1474,11 @@ func smpte12M_23_98_ToAbsoluteTime(timeCode string) (*Decimal, error) {
 		return nil, errors.New(Smpte12M_2398_BadFormat)
 	}
 
-	return NewDecimal(1001).DivFloat64(24000).MulFloat64(float64(frames + (24 * seconds) + (1440 * minutes) + (86400 * hours) + (2073600 * days))), nil
+	return newDecimal(1001).DivFloat64(24000).MulFloat64(float64(frames + (24 * seconds) + (1440 * minutes) + (86400 * hours) + (2073600 * days))), nil
 }
 
 //smpte12M_24_ToAbsoluteTime Converts to Absolute time from SMPTE 12M 24.
-func smpte12M_24_ToAbsoluteTime(timeCode string) (*Decimal, error) {
+func smpte12M_24_ToAbsoluteTime(timeCode string) (*decimal, error) {
 	days, hours, minutes, seconds, frames, err := parseTimecodeString(timeCode)
 	if err != nil {
 		return nil, err
@@ -1488,11 +1488,11 @@ func smpte12M_24_ToAbsoluteTime(timeCode string) (*Decimal, error) {
 		return nil, errors.New(Smpte12M_24_BadFormat)
 	}
 
-	return NewDecimal(1).DivFloat64(24).MulFloat64(float64(frames + (24 * seconds) + (1440 * minutes) + (86400 * hours) + (2073600 * days))), nil
+	return newDecimal(1).DivFloat64(24).MulFloat64(float64(frames + (24 * seconds) + (1440 * minutes) + (86400 * hours) + (2073600 * days))), nil
 }
 
 //smpte12M_25_ToAbsoluteTime Converts to Absolute time from SMPTE 12M 25.
-func smpte12M_25_ToAbsoluteTime(timeCode string) (*Decimal, error) {
+func smpte12M_25_ToAbsoluteTime(timeCode string) (*decimal, error) {
 	days, hours, minutes, seconds, frames, err := parseTimecodeString(timeCode)
 	if err != nil {
 		return nil, err
@@ -1502,11 +1502,11 @@ func smpte12M_25_ToAbsoluteTime(timeCode string) (*Decimal, error) {
 		return nil, errors.New(Smpte12M_25_BadFormat)
 	}
 
-	return NewDecimal(1).DivFloat64(25).MulFloat64(float64(frames + (25 * seconds) + (1500 * minutes) + (90000 * hours) + (2160000 * days))), nil
+	return newDecimal(1).DivFloat64(25).MulFloat64(float64(frames + (25 * seconds) + (1500 * minutes) + (90000 * hours) + (2160000 * days))), nil
 }
 
 //smpte12M_29_97_Drop_ToAbsoluteTime Converts to Absolute time from SMPTE 12M 29.97 Drop frame.
-func smpte12M_29_97_Drop_ToAbsoluteTime(timeCode string) (*Decimal, error) {
+func smpte12M_29_97_Drop_ToAbsoluteTime(timeCode string) (*decimal, error) {
 	days, hours, minutes, seconds, frames, err := parseTimecodeString(timeCode)
 	if err != nil {
 		return nil, err
@@ -1516,12 +1516,12 @@ func smpte12M_29_97_Drop_ToAbsoluteTime(timeCode string) (*Decimal, error) {
 		return nil, errors.New(Smpte12M_2997_Drop_BadFormat)
 	}
 
-	return NewDecimal(1001).DivFloat64(30000).MulFloat64(float64(frames + (30 * seconds) + (1798 * minutes) + ((2 * (minutes / 10)) + (107892 * hours) + (2589408 * days)))), nil
+	return newDecimal(1001).DivFloat64(30000).MulFloat64(float64(frames + (30 * seconds) + (1798 * minutes) + ((2 * (minutes / 10)) + (107892 * hours) + (2589408 * days)))), nil
 	// return (1001 / 30000M) * (frames + (30 * seconds) + (1798 * minutes) + ((2 * (minutes / 10)) + (107892 * hours) + (2589408 * days)));
 }
 
 //smpte12M_29_97_NonDrop_ToAbsoluteTime Converts to Absolute time from SMPTE 12M 29.97 Non Drop.
-func smpte12M_29_97_NonDrop_ToAbsoluteTime(timeCode string) (*Decimal, error) {
+func smpte12M_29_97_NonDrop_ToAbsoluteTime(timeCode string) (*decimal, error) {
 	days, hours, minutes, seconds, frames, err := parseTimecodeString(timeCode)
 	if err != nil {
 		return nil, err
@@ -1532,11 +1532,11 @@ func smpte12M_29_97_NonDrop_ToAbsoluteTime(timeCode string) (*Decimal, error) {
 	}
 
 	// round to 8 decimals
-	return NewDecimal(1001).DivFloat64(30000).MulFloat64(float64(frames + (30 * seconds) + (1800 * minutes) + (108000 * hours) + (2592000 * days))).Round(8), nil
+	return newDecimal(1001).DivFloat64(30000).MulFloat64(float64(frames + (30 * seconds) + (1800 * minutes) + (108000 * hours) + (2592000 * days))).Round(8), nil
 }
 
 //smpte12M_30_ToAbsoluteTime Converts to Absolute time from SMPTE 12M 30.
-func smpte12M_30_ToAbsoluteTime(timeCode string) (*Decimal, error) {
+func smpte12M_30_ToAbsoluteTime(timeCode string) (*decimal, error) {
 	days, hours, minutes, seconds, frames, err := parseTimecodeString(timeCode)
 	if err != nil {
 		return nil, err
@@ -1545,7 +1545,7 @@ func smpte12M_30_ToAbsoluteTime(timeCode string) (*Decimal, error) {
 		return nil, errors.New(Smpte12M_30_BadFormat)
 	}
 
-	return NewDecimal(1).DivFloat64(30).MulFloat64(float64(frames + (30 * seconds) + (1800 * minutes) + (108000 * hours) + (2592000 * days))), nil
+	return newDecimal(1).DivFloat64(30).MulFloat64(float64(frames + (30 * seconds) + (1800 * minutes) + (108000 * hours) + (2592000 * days))), nil
 }
 
 // ticks27MhzToPcrTb Converts from 27Mhz ticks to PCRTb.
@@ -1581,8 +1581,8 @@ func ticks27MhzToPcrTb(ticks27Mhz int64) int64 {
 /// </summary>
 /// <param name="ticksPcrTb">Ticks PCRTb to be converted.</param>
 /// <returns>The absolute time.</returns>
-func ticksPcrTbToAbsoluteTime(ticksPcrTb int64) *Decimal {
-	return NewDecimal(float64(ticksPcrTb)).DivFloat64(90000)
+func ticksPcrTbToAbsoluteTime(ticksPcrTb int64) *decimal {
+	return newDecimal(float64(ticksPcrTb)).DivFloat64(90000)
 }
 
 // ticks27MhzToAbsoluteTime ..
@@ -1591,13 +1591,13 @@ func ticksPcrTbToAbsoluteTime(ticksPcrTb int64) *Decimal {
 /// </summary>
 /// <param name="ticks27Mhz">Ticks 27Mhz to be converted.</param>
 /// <returns>The absolute time.</returns>
-func ticks27MhzToAbsoluteTime(ticks27Mhz int64) *Decimal {
+func ticks27MhzToAbsoluteTime(ticks27Mhz int64) *decimal {
 	ticksPcrTb := ticks27MhzToPcrTb(ticks27Mhz)
 	return ticksPcrTbToAbsoluteTime(ticksPcrTb)
 }
 
 // absoluteTimeToSmpte12M Converts to SMPTE 12M.
-func absoluteTimeToSmpte12M(absoluteTime *Decimal, rate SmpteFrameRate) string {
+func absoluteTimeToSmpte12M(absoluteTime *decimal, rate SmpteFrameRate) string {
 	timeCode := ""
 
 	if rate == Smpte2398 {
@@ -1618,34 +1618,34 @@ func absoluteTimeToSmpte12M(absoluteTime *Decimal, rate SmpteFrameRate) string {
 }
 
 // absoluteTimeToFrames Returns the number of frames.
-func absoluteTimeToFrames(absoluteTime *Decimal, rate SmpteFrameRate) int64 {
+func absoluteTimeToFrames(absoluteTime *decimal, rate SmpteFrameRate) int64 {
 	if rate == Smpte2398 {
-		ret := 24 * NewDecimal(1000).DivFloat64(1001).Float32() * absoluteTime.Add(EPSILON).Float32()
-		return NewDecimal(float64(ret)).Round(25).Floor().Int64()
+		ret := 24 * newDecimal(1000).DivFloat64(1001).Float32() * absoluteTime.Add(EPSILON).Float32()
+		return newDecimal(float64(ret)).Round(25).Floor().Int64()
 		// return Convert.ToInt64(decimal.Floor(decimal.Round((decimal)(24 * (float)(1000 / 1001M) * (float)(absoluteTime + EPSILON)), 25)));
 	}
 
 	if rate == Smpte24 {
 		ret := 24 * absoluteTime.Float32()
-		return NewDecimal(float64(ret)).Floor().Int64()
+		return newDecimal(float64(ret)).Floor().Int64()
 		// return Convert.ToInt64(decimal.Floor((decimal)(24 * (float)absoluteTime)));
 	}
 
 	if rate == Smpte25 {
 		ret := 25 * absoluteTime.Float32()
-		return NewDecimal(float64(ret)).Floor().Int64()
+		return newDecimal(float64(ret)).Floor().Int64()
 		// return Convert.ToInt64(decimal.Floor((decimal)(25 * (float)absoluteTime)));
 	}
 
 	if rate == Smpte2997Drop {
-		ret := 30 * NewDecimal(1000).DivFloat64(1001).Float32() * absoluteTime.Add(EPSILON).Float32()
-		return NewDecimal(float64(ret)).Round(25).Floor().Int64()
+		ret := 30 * newDecimal(1000).DivFloat64(1001).Float32() * absoluteTime.Add(EPSILON).Float32()
+		return newDecimal(float64(ret)).Round(25).Floor().Int64()
 		// return Convert.ToInt64(decimal.Floor(decimal.Round((decimal)(30 * (float)(1000 / 1001M) * (float)(absoluteTime + EPSILON)), 25)));
 	}
 
 	if rate == Smpte2997NonDrop {
-		ret := 30 * NewDecimal(1000).DivFloat64(1001).Float32() * absoluteTime.Add(EPSILON).Float32()
-		return NewDecimal(float64(ret)).Round(25).Floor().Int64()
+		ret := 30 * newDecimal(1000).DivFloat64(1001).Float32() * absoluteTime.Add(EPSILON).Float32()
+		return newDecimal(float64(ret)).Round(25).Floor().Int64()
 		// return Convert.ToInt64(decimal.Floor(decimal.Round((decimal)(30 * (float)(1000 / 1001M) * (float)(absoluteTime + EPSILON)), 25)));
 	}
 
@@ -1655,7 +1655,7 @@ func absoluteTimeToFrames(absoluteTime *Decimal, rate SmpteFrameRate) int64 {
 		// return Convert.ToInt64(30 * (float)absoluteTime);
 	}
 
-	return NewDecimal(30).Mul(absoluteTime).Floor().Int64()
+	return newDecimal(30).Mul(absoluteTime).Floor().Int64()
 	// return Convert.ToInt64(decimal.Floor(30 * absoluteTime));
 }
 
@@ -1667,25 +1667,25 @@ func absoluteTimeToFrames(absoluteTime *Decimal, rate SmpteFrameRate) int64 {
 /// <param name="rate">The SMPTE frame rate to use for the conversion.</param>
 /// <returns>The absolute time.</returns>
 func framesToAbsoluteTime(frames int64, rate SmpteFrameRate) float64 {
-	var absoluteTimeInDecimal *Decimal
+	var absoluteTimeInDecimal *decimal
 
 	if rate == Smpte2398 {
-		absoluteTimeInDecimal = NewDecimalInt64(frames).DivFloat64(24).DivFloat64(NewDecimal(1000).DivFloat64(1001).Round(11).Float64())
+		absoluteTimeInDecimal = newDecimalInt64(frames).DivFloat64(24).DivFloat64(newDecimal(1000).DivFloat64(1001).Round(11).Float64())
 		//    frames / 24M / decimal.Round((1000 / 1001M), 11);
 	} else if rate == Smpte24 {
-		absoluteTimeInDecimal = NewDecimalInt64(frames).DivFloat64(24)
+		absoluteTimeInDecimal = newDecimalInt64(frames).DivFloat64(24)
 		//    absoluteTimeInDecimal = frames / 24M;
 	} else if rate == Smpte25 {
-		absoluteTimeInDecimal = NewDecimalInt64(frames).DivFloat64(25)
+		absoluteTimeInDecimal = newDecimalInt64(frames).DivFloat64(25)
 		//    absoluteTimeInDecimal = frames / 25M;
 	} else if rate == Smpte2997Drop || rate == Smpte2997NonDrop {
-		absoluteTimeInDecimal = NewDecimalInt64(frames).DivFloat64(30).DivFloat64(NewDecimal(1000).DivFloat64(1001).Round(11).Float64())
+		absoluteTimeInDecimal = newDecimalInt64(frames).DivFloat64(30).DivFloat64(newDecimal(1000).DivFloat64(1001).Round(11).Float64())
 		//    absoluteTimeInDecimal = frames / 30M / decimal.Round((1000 / 1001M), 11);
 	} else if rate == Smpte30 {
-		absoluteTimeInDecimal = NewDecimalInt64(frames).DivFloat64(30)
+		absoluteTimeInDecimal = newDecimalInt64(frames).DivFloat64(30)
 		//    absoluteTimeInDecimal = frames / 30M;
 	} else {
-		absoluteTimeInDecimal = NewDecimalInt64(frames).DivFloat64(30)
+		absoluteTimeInDecimal = newDecimalInt64(frames).DivFloat64(30)
 		//    absoluteTimeInDecimal = frames / 30M;
 	}
 
@@ -1693,7 +1693,7 @@ func framesToAbsoluteTime(frames int64, rate SmpteFrameRate) float64 {
 }
 
 // absoluteTimeToSmpte12M_23_98fps Returns the SMPTE 12M 23.98 timecode.
-func absoluteTimeToSmpte12M_23_98fps(absoluteTime *Decimal) string {
+func absoluteTimeToSmpte12M_23_98fps(absoluteTime *decimal) string {
 	framecount := absoluteTimeToFrames(absoluteTime, Smpte2398)
 
 	days := int32((framecount / 86400) / 24)
@@ -1706,7 +1706,7 @@ func absoluteTimeToSmpte12M_23_98fps(absoluteTime *Decimal) string {
 }
 
 // absoluteTimeToSmpte12M_24fps Converts to SMPTE 12M 24fps.
-func absoluteTimeToSmpte12M_24fps(absoluteTime *Decimal) string {
+func absoluteTimeToSmpte12M_24fps(absoluteTime *decimal) string {
 	framecount := absoluteTimeToFrames(absoluteTime, Smpte24)
 
 	days := int32((framecount / 86400) / 24)
@@ -1719,7 +1719,7 @@ func absoluteTimeToSmpte12M_24fps(absoluteTime *Decimal) string {
 }
 
 // absoluteTimeToSmpte12M_25fps Converts to SMPTE 12M 25fps.
-func absoluteTimeToSmpte12M_25fps(absoluteTime *Decimal) string {
+func absoluteTimeToSmpte12M_25fps(absoluteTime *decimal) string {
 	framecount := absoluteTimeToFrames(absoluteTime, Smpte25)
 
 	days := int32((framecount / 90000) / 24)
@@ -1732,7 +1732,7 @@ func absoluteTimeToSmpte12M_25fps(absoluteTime *Decimal) string {
 }
 
 // absoluteTimeToSmpte12M_29_97_Drop Converts to SMPTE 12M 29.97fps Drop.
-func absoluteTimeToSmpte12M_29_97_Drop(absoluteTime *Decimal) string {
+func absoluteTimeToSmpte12M_29_97_Drop(absoluteTime *decimal) string {
 	framecount := absoluteTimeToFrames(absoluteTime, Smpte2997Drop)
 	days := (int32)((framecount / 107892) / 24)
 	hours := (int32)((framecount / 107892) % 24)
@@ -1744,7 +1744,7 @@ func absoluteTimeToSmpte12M_29_97_Drop(absoluteTime *Decimal) string {
 }
 
 // absoluteTimeToSmpte12M_29_97_NonDrop Converts to SMPTE 12M 29.97fps Non Drop.
-func absoluteTimeToSmpte12M_29_97_NonDrop(absoluteTime *Decimal) string {
+func absoluteTimeToSmpte12M_29_97_NonDrop(absoluteTime *decimal) string {
 	framecount := absoluteTimeToFrames(absoluteTime, Smpte2997NonDrop)
 
 	days := int32((framecount / 108000) / 24)
@@ -1757,7 +1757,7 @@ func absoluteTimeToSmpte12M_29_97_NonDrop(absoluteTime *Decimal) string {
 }
 
 // absoluteTimeToSmpte12M30Fps Converts to SMPTE 12M 30fps.
-func absoluteTimeToSmpte12M30Fps(absoluteTime *Decimal) string {
+func absoluteTimeToSmpte12M30Fps(absoluteTime *decimal) string {
 	framecount := absoluteTimeToFrames(absoluteTime, Smpte30)
 
 	days := int32((framecount / 108000) / 24)

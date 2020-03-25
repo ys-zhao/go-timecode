@@ -333,14 +333,14 @@ func Test_Ticks27MhzToSMPTE30(t *testing.T) {
 
 func Test_SMPTE30ToTicks27Mhz(t *testing.T) {
 	const Timecode string = "01:36:37:04"
-	ticks27Mhz := Smpte12MToTicks27Mhz(Timecode, Smpte30)
+	ticks27Mhz := smpte12MToTicks27Mhz(Timecode, Smpte30)
 
 	assert.Equal(t, int64(156522600000), ticks27Mhz)
 }
 
 func Test_TimecodeFromTicks27BackToString(t *testing.T) {
 	const Timecode string = "01:36:37:04"
-	ticks27Mhz := Smpte12MToTicks27Mhz(Timecode, Smpte30)
+	ticks27Mhz := smpte12MToTicks27Mhz(Timecode, Smpte30)
 
 	t1, _ := FromTicks27Mhz(ticks27Mhz, Smpte30)
 
@@ -349,7 +349,7 @@ func Test_TimecodeFromTicks27BackToString(t *testing.T) {
 
 func Test_TimecodeFromTicks27BackToString2398(t *testing.T) {
 	const Timecode string = "01:36:31:08"
-	ticks27Mhz := Smpte12MToTicks27Mhz(Timecode, Smpte2398)
+	ticks27Mhz := smpte12MToTicks27Mhz(Timecode, Smpte2398)
 
 	t1, _ := FromTicks27Mhz(ticks27Mhz, Smpte2398)
 
@@ -358,7 +358,7 @@ func Test_TimecodeFromTicks27BackToString2398(t *testing.T) {
 
 func Test_TimecodeFromTicks27BackToString24(t *testing.T) {
 	const Timecode string = "01:36:37:05"
-	ticks27Mhz := Smpte12MToTicks27Mhz(Timecode, Smpte24)
+	ticks27Mhz := smpte12MToTicks27Mhz(Timecode, Smpte24)
 
 	t1, _ := FromTicks27Mhz(ticks27Mhz, Smpte24)
 
@@ -367,7 +367,7 @@ func Test_TimecodeFromTicks27BackToString24(t *testing.T) {
 
 func Test_TimecodeFromTicks27BackToString25(t *testing.T) {
 	const Timecode string = "01:36:37:05"
-	ticks27Mhz := Smpte12MToTicks27Mhz(Timecode, Smpte25)
+	ticks27Mhz := smpte12MToTicks27Mhz(Timecode, Smpte25)
 
 	t1, _ := FromTicks27Mhz(ticks27Mhz, Smpte25)
 
@@ -376,7 +376,7 @@ func Test_TimecodeFromTicks27BackToString25(t *testing.T) {
 
 func Test_TimecodeFromTicks27BackToString2997Drop(t *testing.T) {
 	const Timecode string = "01:36:37;05"
-	ticks27Mhz := Smpte12MToTicks27Mhz(Timecode, Smpte2997Drop)
+	ticks27Mhz := smpte12MToTicks27Mhz(Timecode, Smpte2997Drop)
 
 	t1, _ := FromTicks27Mhz(ticks27Mhz, Smpte2997Drop)
 
@@ -385,7 +385,7 @@ func Test_TimecodeFromTicks27BackToString2997Drop(t *testing.T) {
 
 func Test_TimecodeFromTicks27BackToString2997NonDrop(t *testing.T) {
 	const Timecode string = "01:36:37:05"
-	ticks27Mhz := Smpte12MToTicks27Mhz(Timecode, Smpte2997NonDrop)
+	ticks27Mhz := smpte12MToTicks27Mhz(Timecode, Smpte2997NonDrop)
 
 	t1, _ := FromTicks27Mhz(ticks27Mhz, Smpte2997NonDrop)
 
@@ -393,19 +393,19 @@ func Test_TimecodeFromTicks27BackToString2997NonDrop(t *testing.T) {
 }
 
 func Test_ValidateBadTimecode1(t *testing.T) {
-	valid := ValidateSmpte12MTimecode("24:00:00:12")
+	valid := validateSmpte12MTimecode("24:00:00:12")
 
 	assert.False(t, valid)
 }
 
 func Test_ValidateBadTimecode2(t *testing.T) {
-	valid := ValidateSmpte12MTimecode("01:60:10:10")
+	valid := validateSmpte12MTimecode("01:60:10:10")
 
 	assert.False(t, valid)
 }
 
 func Test_ValidateGoodTimecode(t *testing.T) {
-	valid := ValidateSmpte12MTimecode("23:38:10:10")
+	valid := validateSmpte12MTimecode("23:38:10:10")
 
 	assert.True(t, valid)
 }
@@ -1031,14 +1031,14 @@ func Test_KnownTimecode_Smpte299ND_MatchesString1_Days(t *testing.T) {
 /// </summary>
 
 func Test_CheckSomeAbsoluteTimeToFramesAlgorithmFor2398(t *testing.T) {
-	Epsilon := NewDecimalString("0.00000000000000000000000001")
+	Epsilon := newDecimalString("0.00000000000000000000000001")
 
-	absoluteTime := NewDecimalString("23.481791666666666666666666648")
-	frames := NewDecimal(24).MulFloat64(1000).DivFloat64(1001).Mul(absoluteTime.Add(Epsilon)).Round(26).Floor().Int64()
+	absoluteTime := newDecimalString("23.481791666666666666666666648")
+	frames := newDecimal(24).MulFloat64(1000).DivFloat64(1001).Mul(absoluteTime.Add(Epsilon)).Round(26).Floor().Int64()
 	assert.Equal(t, int64(562), frames, "wrong # of frames for this absolute Time.")
 
-	absoluteTime = NewDecimal(23.48179166667)
-	frames = NewDecimal(24).MulFloat64(1000).DivFloat64(1001).Mul(absoluteTime.Add(Epsilon)).Round(26).Floor().Int64()
+	absoluteTime = newDecimal(23.48179166667)
+	frames = newDecimal(24).MulFloat64(1000).DivFloat64(1001).Mul(absoluteTime.Add(Epsilon)).Round(26).Floor().Int64()
 	assert.Equal(t, int64(563), frames, "wrong # of frames for this absolute Time")
 }
 
@@ -1445,7 +1445,7 @@ func Test_CreateLongRunningTimeCode_30FromIntegers(t *testing.T) {
 }
 
 func Test_ValidateBadLongRunningTimecode(t *testing.T) {
-	valid := ValidateSmpte12MTimecode("-1:01:00:00:12")
+	valid := validateSmpte12MTimecode("-1:01:00:00:12")
 
 	assert.False(t, valid)
 }
