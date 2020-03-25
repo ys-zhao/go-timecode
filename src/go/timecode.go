@@ -46,6 +46,30 @@ func newDecimalInt64(value int64) *decimal {
 	return newDecimal(float64(value))
 }
 
+func addDecimal(v1, v2 *decimal) *decimal {
+	return &decimal{
+		value: newBigFloat(0).Add(v1.value, v2.value),
+	}
+}
+
+func subDecimal(v1, v2 *decimal) *decimal {
+	return &decimal{
+		value: newBigFloat(0).Sub(v1.value, v2.value),
+	}
+}
+
+func mulDecimal(v1, v2 *decimal) *decimal {
+	return &decimal{
+		value: newBigFloat(0).Mul(v1.value, v2.value),
+	}
+}
+
+func divDecimal(v1, v2 *decimal) *decimal {
+	return &decimal{
+		value: newBigFloat(0).Quo(v1.value, v2.value),
+	}
+}
+
 // Copy ..
 func (m *decimal) Copy() *decimal {
 	ret := newBigFloat(0)
@@ -1180,6 +1204,8 @@ func smpte12MToTicks27Mhz(timeCode string, rate SmpteFrameRate) int64 {
        return Unknown;
    }
 */
+
+// Add ..
 /// <summary>
 /// Adds the specified TimeCode to this instance.
 /// </summary>
@@ -1189,8 +1215,69 @@ func smpte12MToTicks27Mhz(timeCode string, rate SmpteFrameRate) int64 {
 /// <exception cref="System.OverflowException">
 /// The resulting TimeCode is less than TimeCode.MinValue or greater than TimeCode.MaxValue.
 /// </exception>
-func (m *TimeCode) Add(tc *TimeCode) (*TimeCode, error) {
-	return Add(m, tc)
+func (m *TimeCode) Add(tc *TimeCode) error {
+	m.absoluteTime = addDecimal(m.absoluteTime, tc.absoluteTime)
+	return nil
+}
+
+// Sub substracts timecode
+func (m *TimeCode) Sub(tc *TimeCode) error {
+	m.absoluteTime = subDecimal(m.absoluteTime, tc.absoluteTime)
+	return nil
+}
+
+// AddSeconds ..
+func (m *TimeCode) AddSeconds(seconds float64) error {
+	tc, err := FromSeconds(seconds, m.frameRate)
+	if err != nil {
+		return err
+	}
+	return m.Add(tc)
+}
+
+// SubSeconds ..
+func (m *TimeCode) SubSeconds(seconds float64) error {
+	tc, err := FromSeconds(seconds, m.frameRate)
+	if err != nil {
+		return err
+	}
+	return m.Sub(tc)
+}
+
+// AddFrames ..
+func (m *TimeCode) AddFrames(frames int64) error {
+	tc, err := FromFrames(frames, m.frameRate)
+	if err != nil {
+		return err
+	}
+	return m.Add(tc)
+}
+
+// SubFrames ..
+func (m *TimeCode) SubFrames(frames int64) error {
+	tc, err := FromFrames(frames, m.frameRate)
+	if err != nil {
+		return err
+	}
+	return m.Sub(tc)
+}
+
+// AddTimeCode ..
+func (m *TimeCode) AddTimeCode(timecode string) error {
+	tc, err := FromTimeCode(timecode, m.frameRate)
+	if err != nil {
+		return err
+	}
+	return m.Add(tc)
+}
+
+// SubTimeCode ..
+func (m *TimeCode) SubTimeCode(timecode string) error {
+	tc, err := FromTimeCode(timecode, m.frameRate)
+	if err != nil {
+		return err
+	}
+	return m.Sub(tc)
 }
 
 /*
