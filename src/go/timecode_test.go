@@ -45,19 +45,6 @@ func Test_AddSubTimeCode(t *testing.T) {
 }
 
 func Test_AddSubCombined(t *testing.T) {
-	// frameRate := 29.97
-
-	// tc, _ := FromTime(frameRate, Smpte2997Drop)
-	// tc.AddSeconds(10.5)
-	// tc.AddFrames(20)
-	// tc.AddTimeCode("05:01:20;18")
-	// tc.SubSeconds(1)
-
-	// tc2, _ := FromTime(frameRate, Smpte2997Drop)
-	// tc.AddTimeCode("05:01:20;18")
-
-	// tc.Add(tc2)
-
 	tc, _ := FromTimeCode("05:01:20;18", Smpte2997Drop)
 	tc.AddSeconds(10.5)
 	tc.AddFrames(20)
