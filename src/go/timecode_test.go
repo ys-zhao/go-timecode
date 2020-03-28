@@ -336,42 +336,42 @@ func Test_TimeCodesGreaterThanOrEqual3DifferentFrameRatesDropAndPAL(t *testing.T
 
 func Test_Ticks27MhzToSMPTEDrop(t *testing.T) {
 	const Ticks27 int64 = 156523374000
-	timecode := Ticks27MhzToSmpte12M(Ticks27, Smpte2997Drop)
+	timecode := ticks27MhzToSmpte12M(Ticks27, Smpte2997Drop)
 
 	assert.Equal(t, "01:36:37;05", timecode)
 }
 
 func Test_Ticks27MhzToSMPTENonDrop(t *testing.T) {
 	const Ticks27 int64 = 156523374000
-	timecode := Ticks27MhzToSmpte12M(Ticks27, Smpte2997NonDrop)
+	timecode := ticks27MhzToSmpte12M(Ticks27, Smpte2997NonDrop)
 
 	assert.Equal(t, "01:36:31:11", timecode)
 }
 
 func Test_Ticks27MhzToSMPTE2398(t *testing.T) {
 	const Ticks27 int64 = 156523374000
-	timecode := Ticks27MhzToSmpte12M(Ticks27, Smpte2398)
+	timecode := ticks27MhzToSmpte12M(Ticks27, Smpte2398)
 
 	assert.Equal(t, "01:36:31:08", timecode)
 }
 
 func Test_Ticks27MhzToSMPTE24(t *testing.T) {
 	const Ticks27 int64 = 156523374000
-	timecode := Ticks27MhzToSmpte12M(Ticks27, Smpte24)
+	timecode := ticks27MhzToSmpte12M(Ticks27, Smpte24)
 
 	assert.Equal(t, "01:36:37:03", timecode)
 }
 
 func Test_Ticks27MhzToSMPTE25(t *testing.T) {
 	const Ticks27 int64 = 156523374000
-	timecode := Ticks27MhzToSmpte12M(Ticks27, Smpte25)
+	timecode := ticks27MhzToSmpte12M(Ticks27, Smpte25)
 
 	assert.Equal(t, "01:36:37:04", timecode)
 }
 
 func Test_Ticks27MhzToSMPTE30(t *testing.T) {
 	const Ticks27 int64 = 156522600000
-	timecode := Ticks27MhzToSmpte12M(Ticks27, Smpte30)
+	timecode := ticks27MhzToSmpte12M(Ticks27, Smpte30)
 
 	assert.Equal(t, "01:36:37:04", timecode)
 }
@@ -670,7 +670,7 @@ func Test_Add_Frames_To_Existing_TimeCode_2398_Ensure_Correct_Time(t *testing.T)
 		expectedFrameCount++
 		currentTimeCode.Add(detal)
 
-		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames {0} did not match TotalFrames {1}", expectedFrameCount, currentTimeCode.TotalFrames)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames {0} did not match TotalFrames {1}", expectedFrameCount, currentTimeCode.TotalFrames())
 	}
 }
 
@@ -711,25 +711,25 @@ func Test_AddFramesToExistingTimeCode2997NdEnsureCorrectTime(t *testing.T) {
 }
 
 func Test_Add_Frames_To_Existing_TimeCode_Smpte2398_Ensure_Correct_Time(t *testing.T) {
-	currentTimeCode, _ := FromSeconds(float64(0), Smpte2398)
+	currentTimeCode, _ := FromSeconds(0, Smpte2398)
 	oneFrame, _ := FromFrames(1, Smpte2398)
 	expectedFrameCount := currentTimeCode.TotalFrames()
 	assert.Equal(t, int64(1), oneFrame.TotalFrames())
 	for i := 1; i < 50000; i++ {
 		expectedFrameCount++
 		currentTimeCode.Add(oneFrame)
-		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
 	}
 }
 func Test_Add_Frames_To_Existing_TimeCode_Smpte24_Ensure_Correct_Time(t *testing.T) {
-	currentTimeCode, _ := FromSeconds(float64(0), Smpte24)
+	currentTimeCode, _ := FromSeconds(0, Smpte24)
 	oneFrame, _ := FromFrames(1, Smpte24)
 	expectedFrameCount := currentTimeCode.TotalFrames()
 	assert.Equal(t, int64(1), oneFrame.TotalFrames())
 	for i := 1; i < 50000; i++ {
 		expectedFrameCount++
 		currentTimeCode.Add(oneFrame)
-		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
 	}
 }
 
@@ -739,52 +739,137 @@ func Test_Add_Frames_To_Existing_TimeCode_Smpte24_Ensure_Correct_Time(t *testing
 
 func Test_Add_Frames_To_Existing_TimeCode_Smpte25_Ensure_Correct_Time(t *testing.T) {
 	t.Skip("TODO")
-	currentTimeCode, _ := FromSeconds(float64(0), Smpte25)
+	currentTimeCode, _ := FromSeconds(0, Smpte25)
 	oneFrame, _ := FromFrames(1, Smpte25)
 	expectedFrameCount := currentTimeCode.TotalFrames()
 	assert.Equal(t, int64(1), oneFrame.TotalFrames())
 	for i := 1; i < 50000; i++ {
 		expectedFrameCount++
 		currentTimeCode.Add(oneFrame)
-		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
 	}
 }
 
 func Test_Add_Frames_To_Existing_TimeCode_Smpte2997Drop_Ensure_Correct_Time(t *testing.T) {
-	currentTimeCode, _ := FromSeconds(float64(0), Smpte2997Drop)
+	currentTimeCode, _ := FromSeconds(0, Smpte2997Drop)
 	oneFrame, _ := FromFrames(1, Smpte2997Drop)
 	expectedFrameCount := currentTimeCode.TotalFrames()
 	assert.Equal(t, int64(1), oneFrame.TotalFrames())
 	for i := 1; i < 50000; i++ {
 		expectedFrameCount++
 		currentTimeCode.Add(oneFrame)
-		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
 	}
 }
 
 func Test_Add_Frames_To_Existing_TimeCode_Smpte2997NonDrop_Ensure_Correct_Time(t *testing.T) {
-	currentTimeCode, _ := FromSeconds(float64(0), Smpte2997NonDrop)
+	currentTimeCode, _ := FromSeconds(0, Smpte2997NonDrop)
 	oneFrame, _ := FromFrames(1, Smpte2997NonDrop)
 	expectedFrameCount := currentTimeCode.TotalFrames()
 	assert.Equal(t, int64(1), oneFrame.TotalFrames())
 	for i := 1; i < 50000; i++ {
 		expectedFrameCount++
 		currentTimeCode.Add(oneFrame)
-		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
 	}
 }
 
 func Test_Add_Frames_To_Existing_TimeCode_Smpte30_Ensure_Correct_Time(t *testing.T) {
 	t.Skip()
-	currentTimeCode, _ := FromSeconds(float64(0), Smpte30)
+	currentTimeCode, _ := FromSeconds(0, Smpte30)
 	oneFrame, _ := FromFrames(1, Smpte30)
 	expectedFrameCount := currentTimeCode.TotalFrames()
 	assert.Equal(t, int64(1), oneFrame.TotalFrames())
 	for i := 1; i < 50000; i++ {
 		expectedFrameCount++
 		currentTimeCode.Add(oneFrame)
-		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
 	}
+}
+
+func Test_Add_Frames_To_Existing_TimeCode_Smpte50_Ensure_Correct_Time(t *testing.T) {
+	currentTimeCode, _ := FromSeconds(0, Smpte50)
+	oneFrame, _ := FromFrames(1, Smpte50)
+	expectedFrameCount := currentTimeCode.TotalFrames()
+	assert.Equal(t, int64(1), oneFrame.TotalFrames())
+	for i := 1; i < 50000; i++ {
+		expectedFrameCount++
+		currentTimeCode.Add(oneFrame)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
+	}
+}
+
+func Test_Add_Frames_To_Existing_TimeCode_Smpte5994Drop_Ensure_Correct_Time(t *testing.T) {
+	currentTimeCode, _ := FromSeconds(0, Smpte5994Drop)
+	oneFrame, _ := FromFrames(1, Smpte5994Drop)
+	expectedFrameCount := currentTimeCode.TotalFrames()
+	assert.Equal(t, int64(1), oneFrame.TotalFrames())
+	for i := 1; i < 50000; i++ {
+		expectedFrameCount++
+		currentTimeCode.Add(oneFrame)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
+	}
+}
+
+func Test_Add_Frames_To_Existing_TimeCode_Smpte5994NonDrop_Ensure_Correct_Time(t *testing.T) {
+	currentTimeCode, _ := FromSeconds(0, Smpte5994NonDrop)
+	oneFrame, _ := FromFrames(1, Smpte5994NonDrop)
+	expectedFrameCount := currentTimeCode.TotalFrames()
+	assert.Equal(t, int64(1), oneFrame.TotalFrames())
+	for i := 1; i < 50000; i++ {
+		expectedFrameCount++
+		currentTimeCode.Add(oneFrame)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
+	}
+}
+
+func Test_Add_Frames_To_Existing_TimeCode_Smpte60_Ensure_Correct_Time(t *testing.T) {
+	currentTimeCode, _ := FromSeconds(0, Smpte60)
+	oneFrame, _ := FromFrames(1, Smpte60)
+	expectedFrameCount := currentTimeCode.TotalFrames()
+	assert.Equal(t, int64(1), oneFrame.TotalFrames())
+	for i := 1; i < 50000; i++ {
+		expectedFrameCount++
+		currentTimeCode.Add(oneFrame)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
+	}
+}
+
+func Test_Add_Frames_To_Existing_TimeCode_Smpte96_Ensure_Correct_Time(t *testing.T) {
+	currentTimeCode, _ := FromSeconds(0, Smpte96)
+	oneFrame, _ := FromFrames(1, Smpte96)
+	expectedFrameCount := currentTimeCode.TotalFrames()
+	assert.Equal(t, int64(1), oneFrame.TotalFrames())
+	for i := 1; i < 50000; i++ {
+		expectedFrameCount++
+		currentTimeCode.Add(oneFrame)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
+	}
+}
+
+func Test_Add_Frames_To_Existing_TimeCode_Smpte100_Ensure_Correct_Time(t *testing.T) {
+	currentTimeCode, _ := FromSeconds(0, Smpte100)
+	oneFrame, _ := FromFrames(1, Smpte100)
+	expectedFrameCount := currentTimeCode.TotalFrames()
+	assert.Equal(t, int64(1), oneFrame.TotalFrames())
+	for i := 1; i < 50000; i++ {
+		expectedFrameCount++
+		currentTimeCode.Add(oneFrame)
+		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
+	}
+}
+
+func Test_Add_Frames_To_Existing_TimeCode_Smpte120_Ensure_Correct_Time(t *testing.T) {
+	tc, _ := FromSeconds(0, Smpte120)
+	frames := tc.TotalFrames()
+	for i := 1; i < 63; i++ {
+		frames++
+		tc.AddFrames(1)
+		assert.Equal(t, frames, tc.TotalFrames(), "Expected frames %v did not match TotalFrames %v", frames, tc.TotalFrames())
+	}
+	frames++
+	tc.AddFrames(1)
+	assert.Equal(t, frames, tc.TotalFrames(), "Expected frames %v did not match TotalFrames %v", frames, tc.TotalFrames())
 }
 
 /// <summary>
