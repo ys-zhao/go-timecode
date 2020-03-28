@@ -1,8 +1,0 @@
-/Users/yzhao/go/src/github.com/ys-zhao/SMPTETimecode/src/dotnetcore/SMPTETimecode/obj/Debug/netstandard2.0/SMPTETimecode.csprojAssemblyReference.cache
-/Users/yzhao/go/src/github.com/ys-zhao/SMPTETimecode/src/dotnetcore/SMPTETimecode/obj/Debug/netstandard2.0/SMPTETimecode.AssemblyInfoInputs.cache
-/Users/yzhao/go/src/github.com/ys-zhao/SMPTETimecode/src/dotnetcore/SMPTETimecode/obj/Debug/netstandard2.0/SMPTETimecode.AssemblyInfo.cs
-/Users/yzhao/go/src/github.com/ys-zhao/SMPTETimecode/src/dotnetcore/SMPTETimecode/bin/Debug/netstandard2.0/SMPTETimecode.deps.json
-/Users/yzhao/go/src/github.com/ys-zhao/SMPTETimecode/src/dotnetcore/SMPTETimecode/bin/Debug/netstandard2.0/SMPTETimecode.dll
-/Users/yzhao/go/src/github.com/ys-zhao/SMPTETimecode/src/dotnetcore/SMPTETimecode/bin/Debug/netstandard2.0/SMPTETimecode.pdb
-/Users/yzhao/go/src/github.com/ys-zhao/SMPTETimecode/src/dotnetcore/SMPTETimecode/obj/Debug/netstandard2.0/SMPTETimecode.dll
-/Users/yzhao/go/src/github.com/ys-zhao/SMPTETimecode/src/dotnetcore/SMPTETimecode/obj/Debug/netstandard2.0/SMPTETimecode.pdb
