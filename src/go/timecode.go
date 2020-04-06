@@ -952,8 +952,8 @@ func ticks27MhzToSmpte12M(ticks27Mhz int64, rate SmpteFrameRate) string {
 /// value is equal to System.Double.NaN.
 /// </exception>
 func FromDays(days float64, rate SmpteFrameRate) (*TimeCode, error) {
-	absoluteTime := days * float64(TicksPerDayAbsoluteTime)
-	return FromTime(absoluteTime, rate)
+	time := newDecimalFloat64(days).MulInt64(TicksPerDayAbsoluteTime)
+	return fromTimeDecimal(time, rate)
 }
 
 // FromHours ..

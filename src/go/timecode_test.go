@@ -1683,3 +1683,75 @@ func Test_FromDays(t *testing.T) {
 
 	assert.Equal(t, float64(10.5), t1.TotalDays())
 }
+
+func Test_AddSubFrames_2(t *testing.T) {
+	expected := "06:02:31;23"
+	tc, _ := FromTimeCode("05:01:20;18", Smpte2997Drop)
+	tc.AddSeconds(10.5)
+	tc.AddFrames(20)
+	tc.SubSeconds(1)
+	tc.AddTimeCode("01:01:01;01")
+
+	assert.Equal(t, expected, tc.String(), "the timecode doesn't match")
+}
+
+func Test_BetweenDropFrameAndNonDropFrame(t *testing.T) {
+	// from 1 hour drop frame to nondrop
+	tc, _ := FromTimeCode("01:00:00:00", Smpte2997Drop)
+	tc, _ = FromTime(tc.TotalSecondsPrecision(), Smpte2997NonDrop)
+	assert.Equal(t, "00:59:56:12", tc.String())
+
+	// from 1 hour nondrop to drop frame
+	tc, _ = FromTimeCode("01:00:00:00", Smpte2997NonDrop)
+	tc, _ = FromTime(tc.TotalSecondsPrecision(), Smpte2997Drop)
+	assert.Equal(t, "01:00:03;18", tc.String())
+
+	// from 1 hour drop frame to nondrop
+	tc, _ = FromTimeCode("01:00:00:00", Smpte5994Drop)
+	tc, _ = FromTime(tc.TotalSecondsPrecision(), Smpte5994NonDrop)
+	assert.Equal(t, "00:59:56:24", tc.String())
+
+	// from 1 hour nondrop to drop frame
+	tc, _ = FromTimeCode("01:00:00:00", Smpte5994NonDrop)
+	tc, _ = FromTime(tc.TotalSecondsPrecision(), Smpte5994Drop)
+	assert.Equal(t, "01:00:03;36", tc.String())
+}
+
+func Test_Constructor(t *testing.T) {
+	// from absolute time
+	tc, _ := FromTime(1.0, Smpte2398)
+	assert.Equal(t, "00:00:00:23", tc.String())
+	// from days, hours, minutes, seconds, frames
+	tc, _ = FromTimeDays(0, 0, 0, 1, 1, Smpte24)
+	assert.Equal(t, "00:00:01:01", tc.String())
+	// from hours, minutes, seconds, frames
+	tc, _ = FromTimeHours(0, 0, 1, 1, Smpte25)
+	assert.Equal(t, "00:00:01:01", tc.String())
+	// from timecode
+	tc, _ = FromTimeCode("00:00:01:01", Smpte2997NonDrop)
+	assert.Equal(t, "00:00:01:01", tc.String())
+	// from timecode and rate
+	tc, _ = FromTimeCodeRate("00:00:01;01@29.97")
+	assert.Equal(t, "00:00:01;01", tc.String())
+	// from timespan
+	tc, _ = FromTimeSpan(time.Second*1, Smpte30)
+	assert.Equal(t, "00:00:01:00", tc.String())
+	// from number of days
+	tc, _ = FromDays(1.0, Smpte50)
+	assert.Equal(t, "01:00:00:00:00", tc.String())
+	// from number of hours
+	tc, _ = FromHours(1.0, Smpte5994Drop)
+	assert.Equal(t, "01:00:00;00", tc.String())
+	// from number of minutes
+	tc, _ = FromMinutes(1.0, Smpte5994NonDrop)
+	assert.Equal(t, "00:00:59:56", tc.String())
+	// from number of seconds
+	tc, _ = FromSeconds(1.0, Smpte60)
+	assert.Equal(t, "00:00:01:00", tc.String())
+	// from number of frames
+	tc, _ = FromFrames(1, Smpte96)
+	assert.Equal(t, "00:00:00:01", tc.String())
+	// from 27Mhz ticks
+	tc, _ = FromTicks27Mhz(300000, Smpte120)
+	assert.Equal(t, "00:00:00:01", tc.String())
+}
