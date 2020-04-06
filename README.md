@@ -99,4 +99,4 @@ func main() {
 # Support
 If you like the project, and want to support us to maintain the codes, you are welcome to donate with following button.
 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=LEE9LJYEZXQUU)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=LEE9LJYEZXQUU&currency_code=USD&source=url)
