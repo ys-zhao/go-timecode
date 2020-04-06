@@ -5,7 +5,20 @@ This is golang library porting from Microsoft C# [SMPTETimecode](https://github.
 * Added support for the new frame reate
 
 # Features
-- Support rates: Smpte239, Smpte24, Smpte25, Smpte2997Drop, Smpte2997NonDrop, Smpte30, Smpte50, Smpte5994Drop, SmpteNonDrop, Smpte60, Smpte96, Smpte100, Smpte120
+Currently SMPTETimecode supports following frame rates:
+* Smpte239
+* Smpte24
+* Smpte25
+* Smpte2997Drop
+* Smpte2997NonDrop
+* Smpte30
+* Smpte50
+* Smpte5994Drop
+* SmpteNonDrop
+* Smpte60
+* Smpte96
+* Smpte100
+* Smpte120
 
 # Installation
 To install SMPTETimecode, you can use "go get" command:
