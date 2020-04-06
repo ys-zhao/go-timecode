@@ -1,12 +1,36 @@
 package timecode
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func Test_FromTimeCodeAndRate_Positive(t *testing.T) {
+	for rate, rec := range _rateRecords {
+		timeCodeRate := ""
+		if rec.drop {
+			timeCodeRate = fmt.Sprintf("01:02:03;04@%f", rec.rate)
+		} else {
+			timeCodeRate = fmt.Sprintf("01:02:03:04@%f", rec.rate)
+		}
+		t1, err := FromTimeCodeRate(timeCodeRate)
+		assert.Nil(t, err, "invalid timecode and rate")
+		assert.Equal(t, rate, t1.FrameRate(), "framerate doesn't match")
+	}
+}
+
+func Test_FromTimeCodeAndRate_Negitive(t *testing.T) {
+	// invalid rate
+	_, err := FromTimeCodeRate("01:02:03:04@12")
+	assert.NotNil(t, err, "invalid timecode and rate")
+	// invalid drop
+	_, err = FromTimeCodeRate("01:02:03;04@30")
+	assert.NotNil(t, err, "invalid timecode and rate")
+}
 
 func Test_AddSubFrames(t *testing.T) {
 	tc, _ := FromTimeCode("01:24:12:22", Smpte24)
@@ -42,15 +66,6 @@ func Test_AddSubTimeCode(t *testing.T) {
 	assert.Equal(t, "02:25:59:23", tc.String())
 	tc.SubTimeCode("01:01:01:01")
 	assert.Equal(t, "01:24:58:22", tc.String())
-}
-
-func Test_AddSubCombined(t *testing.T) {
-	tc, _ := FromTimeCode("05:01:20;18", Smpte2997Drop)
-	tc.AddSeconds(10.5)
-	tc.AddFrames(20)
-	tc.SubSeconds(1)
-
-	assert.Equal(t, "05:01:30;22", tc.String())
 }
 
 /// <summary>
@@ -566,9 +581,9 @@ func Test_CheckDotNetMathDivide1000By1001(t *testing.T) {
 /// </summary>
 
 func Test_CheckDotNetMathDivide30By1000By1001(t *testing.T) {
-	t.Skip()
 	v, _ := strconv.ParseFloat("30.03", 64)
-	assert.Equal(t, (30 / (1000 / float64(1001))), v)
+	expect := newDecimalFloat64(30 / (1000 / float64(1001))).Round(2).Float64()
+	assert.Equal(t, expect, v)
 }
 
 /// <summary>
@@ -661,12 +676,12 @@ func Test_AddFramesToExistingTimeCodeEnsureCorrectTime(t *testing.T) {
 /// </summary>
 
 func Test_Add_Frames_To_Existing_TimeCode_2398_Ensure_Correct_Time(t *testing.T) {
-	currentTimeCode, _ := FromSeconds(float64(1000), Smpte2398)
+	currentTimeCode, _ := FromSeconds(0, Smpte2398)
 
 	expectedFrameCount := currentTimeCode.TotalFrames()
 	detal, _ := FromFrames(1, Smpte2398)
 
-	for i := 1; i < 30000; i++ {
+	for i := 1; i < 50000; i++ {
 		expectedFrameCount++
 		currentTimeCode.Add(detal)
 
@@ -679,12 +694,12 @@ func Test_Add_Frames_To_Existing_TimeCode_2398_Ensure_Correct_Time(t *testing.T)
 /// </summary>
 
 func Test_AddFramesToExistingTimeCode2997DfEnsureCorrectTime(t *testing.T) {
-	currentTimeCode, _ := FromSeconds(float64(1000), Smpte2997Drop)
+	currentTimeCode, _ := FromSeconds(0, Smpte2997Drop)
 
 	expectedFrameCount := currentTimeCode.TotalFrames()
 	detal, _ := FromFrames(1, Smpte2997Drop)
 
-	for i := 1; i < 30000; i++ {
+	for i := 1; i < 50000; i++ {
 		expectedFrameCount++
 		currentTimeCode.Add(detal)
 
@@ -697,12 +712,12 @@ func Test_AddFramesToExistingTimeCode2997DfEnsureCorrectTime(t *testing.T) {
 /// </summary>
 
 func Test_AddFramesToExistingTimeCode2997NdEnsureCorrectTime(t *testing.T) {
-	currentTimeCode, _ := FromSeconds(float64(1000), Smpte2997NonDrop)
+	currentTimeCode, _ := FromSeconds(0, Smpte2997NonDrop)
 
 	expectedFrameCount := currentTimeCode.TotalFrames()
 	delta, _ := FromFrames(1, Smpte2997NonDrop)
 
-	for i := 1; i < 30000; i++ {
+	for i := 1; i < 50000; i++ {
 		expectedFrameCount++
 		currentTimeCode.Add(delta)
 
@@ -715,7 +730,7 @@ func Test_Add_Frames_To_Existing_TimeCode_Smpte2398_Ensure_Correct_Time(t *testi
 	oneFrame, _ := FromFrames(1, Smpte2398)
 	expectedFrameCount := currentTimeCode.TotalFrames()
 	assert.Equal(t, int64(1), oneFrame.TotalFrames())
-	for i := 1; i < 50000; i++ {
+	for i := 0; i < 50000; i++ {
 		expectedFrameCount++
 		currentTimeCode.Add(oneFrame)
 		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
@@ -731,6 +746,9 @@ func Test_Add_Frames_To_Existing_TimeCode_Smpte24_Ensure_Correct_Time(t *testing
 		currentTimeCode.Add(oneFrame)
 		assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
 	}
+	expectedFrameCount++
+	currentTimeCode.Add(oneFrame)
+	assert.Equal(t, expectedFrameCount, currentTimeCode.TotalFrames(), "Expected frames %v did not match TotalFrames %v", expectedFrameCount, currentTimeCode.TotalFrames())
 }
 
 /// <summary>
@@ -738,7 +756,6 @@ func Test_Add_Frames_To_Existing_TimeCode_Smpte24_Ensure_Correct_Time(t *testing
 /// </summary>
 
 func Test_Add_Frames_To_Existing_TimeCode_Smpte25_Ensure_Correct_Time(t *testing.T) {
-	t.Skip("TODO")
 	currentTimeCode, _ := FromSeconds(0, Smpte25)
 	oneFrame, _ := FromFrames(1, Smpte25)
 	expectedFrameCount := currentTimeCode.TotalFrames()
@@ -775,7 +792,6 @@ func Test_Add_Frames_To_Existing_TimeCode_Smpte2997NonDrop_Ensure_Correct_Time(t
 }
 
 func Test_Add_Frames_To_Existing_TimeCode_Smpte30_Ensure_Correct_Time(t *testing.T) {
-	t.Skip()
 	currentTimeCode, _ := FromSeconds(0, Smpte30)
 	oneFrame, _ := FromFrames(1, Smpte30)
 	expectedFrameCount := currentTimeCode.TotalFrames()
@@ -862,14 +878,11 @@ func Test_Add_Frames_To_Existing_TimeCode_Smpte100_Ensure_Correct_Time(t *testin
 func Test_Add_Frames_To_Existing_TimeCode_Smpte120_Ensure_Correct_Time(t *testing.T) {
 	tc, _ := FromSeconds(0, Smpte120)
 	frames := tc.TotalFrames()
-	for i := 1; i < 63; i++ {
+	for i := 1; i < 500000; i++ {
 		frames++
 		tc.AddFrames(1)
 		assert.Equal(t, frames, tc.TotalFrames(), "Expected frames %v did not match TotalFrames %v", frames, tc.TotalFrames())
 	}
-	frames++
-	tc.AddFrames(1)
-	assert.Equal(t, frames, tc.TotalFrames(), "Expected frames %v did not match TotalFrames %v", frames, tc.TotalFrames())
 }
 
 /// <summary>
@@ -877,7 +890,6 @@ func Test_Add_Frames_To_Existing_TimeCode_Smpte120_Ensure_Correct_Time(t *testin
 /// </summary>
 
 func Test_IsThisValueEqualToOneFrame(t *testing.T) {
-	t.Skip("This is test case has some issue")
 	const OneFrame float64 = 0.033366666666667
 	var oneSecTimeCode, _ = FromTimeHours(0, 0, 0, 1, Smpte2997NonDrop)
 
@@ -1045,11 +1057,9 @@ func Test_KnownAbsoluteTimeIsValid_13(t *testing.T) {
 /// </summary>
 
 func Test_KnownAbsoluteTimeIsValid_14(t *testing.T) {
-	t.Skip("[Ignore]")
-	const Known27Mhz float64 = 43443649200
+	const Known27Mhz int64 = 43443649200
 
-	var t1, _ = FromTime(Known27Mhz, Smpte2398)
-
+	var t1, _ = FromTicks27Mhz(Known27Mhz, Smpte2398)
 	assert.Equal(t, "00:26:47:09", t1.String(), "Not valid timecode for 43443649200 (27Mhz)")
 }
 
@@ -1096,7 +1106,6 @@ func Test_KnownTimecode_Smpte24_MatchesString2(t *testing.T) {
 }
 
 func Test_KnownTimecode_Smpte24_MatchesString3(t *testing.T) {
-	t.Skip("[Ignore]")
 	var t1, _ = FromTimeHours(7, 01, 20, 5, Smpte24)
 	result := t1.String()
 	const Expected string = "07:01:20:05"
@@ -1105,7 +1114,6 @@ func Test_KnownTimecode_Smpte24_MatchesString3(t *testing.T) {
 }
 
 func Test_KnownTimecode_Smpte24_MatchesString4_Days(t *testing.T) {
-	t.Skip("[Ignore]")
 	var t1, _ = FromTimeDays(12, 22, 01, 20, 5, Smpte24)
 	result := t1.String()
 	const Expected string = "12:22:01:20:05"
@@ -1114,7 +1122,6 @@ func Test_KnownTimecode_Smpte24_MatchesString4_Days(t *testing.T) {
 }
 
 func Test_KnownTimecode_Smpte2997DF_MatchesString1_Days(t *testing.T) {
-	t.Skip("[Ignore]")
 	var t1, _ = FromTimeDays(12, 22, 01, 20, 5, Smpte2997Drop)
 	result := t1.String()
 	const Expected string = "12:22:01:20;05"
@@ -1123,12 +1130,105 @@ func Test_KnownTimecode_Smpte2997DF_MatchesString1_Days(t *testing.T) {
 }
 
 func Test_KnownTimecode_Smpte299ND_MatchesString1_Days(t *testing.T) {
-	t.Skip("[Ignore]")
 	var t1, _ = FromTimeDays(12, 22, 01, 20, 5, Smpte2997NonDrop)
 	result := t1.String()
 	const Expected string = "12:22:01:20:05"
 
 	assert.Equal(t, Expected, result)
+}
+
+func Test_KnownTimecode_Smpte24_MatchesString1_Days(t *testing.T) {
+	var t1, _ = FromTimeDays(12, 22, 01, 20, 5, Smpte24)
+	result := t1.String()
+	const Expected string = "12:22:01:20:05"
+
+	assert.Equal(t, Expected, result)
+}
+
+func Test_KnownTimecode_Smpte30_MatchesString1_Days(t *testing.T) {
+	var t1, _ = FromTimeDays(12, 12, 34, 56, 21, Smpte30)
+	result := t1.String()
+	const Expected string = "12:12:34:56:21"
+
+	assert.Equal(t, Expected, result)
+}
+
+func Test_KnownTimecode_Smpte5994Drop_MatchesString1_Days(t *testing.T) {
+	var t1, _ = FromTimeDays(0, 0, 0, 30, 0, Smpte5994Drop)
+	result := t1.String()
+	const Expected string = "00:00:30;00"
+
+	assert.Equal(t, Expected, result)
+}
+
+func Test_KnownTimecode_Smpte5994NonDrop_MatchesString1_Days(t *testing.T) {
+	var t1, _ = FromTimeDays(12, 12, 34, 56, 21, Smpte5994NonDrop)
+	result := t1.String()
+	const Expected string = "12:12:34:56:21"
+
+	assert.Equal(t, Expected, result)
+}
+
+func Test_KnownTimecode_Smpte60_MatchesString1_Days(t *testing.T) {
+	var t1, _ = FromTimeDays(12, 12, 34, 56, 21, Smpte60)
+	result := t1.String()
+	const Expected string = "12:12:34:56:21"
+
+	assert.Equal(t, Expected, result)
+}
+
+func Test_KnownTimecode_Smpte96_MatchesString1_Days(t *testing.T) {
+	var t1, _ = FromTimeDays(12, 12, 34, 56, 21, Smpte96)
+	result := t1.String()
+	const Expected string = "12:12:34:56:21"
+
+	assert.Equal(t, Expected, result)
+}
+
+func Test_KnownTimecode_Smpte100_MatchesString1_Days(t *testing.T) {
+	var t1, _ = FromTimeDays(12, 12, 34, 56, 21, Smpte100)
+	result := t1.String()
+	const Expected string = "12:12:34:56:21"
+
+	assert.Equal(t, Expected, result)
+}
+
+func Test_KnownTimecode_Smpte120_MatchesString1_Days(t *testing.T) {
+	var t1, _ = FromTimeDays(12, 12, 34, 56, 21, Smpte120)
+	result := t1.String()
+	const Expected string = "12:12:34:56:21"
+
+	assert.Equal(t, Expected, result)
+}
+
+func Test_KnownTimecode_Smpte5994Drop_MatchesString_Days(t *testing.T) {
+	for frames := 0; frames < 24; frames++ {
+		var t1, _ = FromTimeDays(12, 12, 34, 56, frames, Smpte5994Drop)
+		expected := fmt.Sprintf("12:12:34:56;%02d", frames)
+		assert.Equal(t, expected, t1.String())
+	}
+}
+
+func Test_KnownTimecode_Smpte2997Drop_MatchesString_Days(t *testing.T) {
+	for frames := 0; frames < 24; frames++ {
+		var t1, _ = FromTimeDays(12, 12, 34, 56, frames, Smpte2997Drop)
+		expected := fmt.Sprintf("12:12:34:56;%02d", frames)
+		assert.Equal(t, expected, t1.String())
+	}
+}
+
+func Test_KnownTimecode_MatchesString_Days(t *testing.T) {
+	rates := []SmpteFrameRate{Smpte2398, Smpte24, Smpte2997NonDrop,
+		Smpte30, Smpte5994NonDrop, Smpte60, Smpte96, Smpte100, Smpte120}
+	for _, rate := range rates {
+		var t1, _ = FromTimeDays(12, 12, 34, 56, 21, rate)
+		assert.Equal(t, "12:12:34:56:21", t1.String(), fmt.Sprintf("invalid timecode for: '%v'", rate))
+	}
+	rates = []SmpteFrameRate{Smpte2997Drop, Smpte5994Drop}
+	for _, rate := range rates {
+		var t1, _ = FromTimeDays(12, 12, 34, 56, 21, rate)
+		assert.Equal(t, "12:12:34:56;21", t1.String(), fmt.Sprintf("invalid nondrop frame timecode for: '%v'", rate))
+	}
 }
 
 /// <summary>
@@ -1139,11 +1239,11 @@ func Test_CheckSomeAbsoluteTimeToFramesAlgorithmFor2398(t *testing.T) {
 	Epsilon := newDecimalString("0.00000000000000000000000001")
 
 	absoluteTime := newDecimalString("23.481791666666666666666666648")
-	frames := newDecimal(24).MulFloat64(1000).DivFloat64(1001).Mul(absoluteTime.Add(Epsilon)).Round(26).Floor().Int64()
+	frames := newDecimalInt64(24).MulFloat64(1000).DivFloat64(1001).Mul(absoluteTime.Add(Epsilon)).Round(26).Floor().Int64()
 	assert.Equal(t, int64(562), frames, "wrong # of frames for this absolute Time.")
 
-	absoluteTime = newDecimal(23.48179166667)
-	frames = newDecimal(24).MulFloat64(1000).DivFloat64(1001).Mul(absoluteTime.Add(Epsilon)).Round(26).Floor().Int64()
+	absoluteTime = newDecimalFloat64(23.48179166667)
+	frames = newDecimalInt64(24).MulFloat64(1000).DivFloat64(1001).Mul(absoluteTime.Add(Epsilon)).Round(26).Floor().Int64()
 	assert.Equal(t, int64(563), frames, "wrong # of frames for this absolute Time")
 }
 
@@ -1260,7 +1360,6 @@ func Test_KnownLongRunningAbsoluteTimeIsValidIn24_2(t *testing.T) {
 /// </summary>
 
 func Test_KnownLongRunningAbsoluteTimeIsValidIn24_3(t *testing.T) {
-	t.Skip("[Ignore]")
 	const KnownTicks27 int64 = 759108344625000
 
 	var t1, _ = FromTicks27Mhz(KnownTicks27, Smpte24)
@@ -1345,8 +1444,6 @@ func Test_KnownLongRunningAbsoluteTimeIsValidIn2997ND_3(t *testing.T) {
 /// </summary>
 
 func Test_KnownLongRunningAbsoluteTimeIsValidIn2997DF_1(t *testing.T) {
-	t.Skip("[Ignore]")
-
 	const Known float64 = 86399.913600000000000
 
 	var t1, _ = FromTime(Known, Smpte2997Drop)
@@ -1359,7 +1456,6 @@ func Test_KnownLongRunningAbsoluteTimeIsValidIn2997DF_1(t *testing.T) {
 /// </summary>
 
 func Test_KnownLongRunningAbsoluteTimeIsValidIn2997DF_2(t *testing.T) {
-	t.Skip("[Ignore]")
 	const Known float64 = 86399.946966666700000
 
 	var t1, _ = FromTime(Known, Smpte2997Drop)
@@ -1372,7 +1468,6 @@ func Test_KnownLongRunningAbsoluteTimeIsValidIn2997DF_2(t *testing.T) {
 /// </summary>
 
 func Test_KnownLongRunningAbsoluteTimeIsValidIn2997DF_3(t *testing.T) {
-	t.Skip("[Ignore]")
 	const Known float64 = 441921.313166667000000
 
 	var t1, _ = FromTime(Known, Smpte2997Drop)
@@ -1512,7 +1607,6 @@ func Test_CreateLongRunningTimeCode_2997NonDropFromIntegers(t *testing.T) {
 /// </summary>
 
 func Test_CreateLongRunningTimeCode_2997DropFromString(t *testing.T) {
-	t.Skip("ignore this test case")
 	tc, err := FromTimeCode("2:01:42:12;22", Smpte2997Drop)
 	assert.Nil(t, err)
 	assert.Equal(t, "02:01:42:12;22", tc.String())
@@ -1523,7 +1617,6 @@ func Test_CreateLongRunningTimeCode_2997DropFromString(t *testing.T) {
 /// </summary>
 
 func Test_CreateLongRunningTimeCode_2997DropFromIntegers(t *testing.T) {
-	t.Skip("ignore this test case")
 	tc, err := FromTimeDays(2, 1, 24, 12, 13, Smpte2997Drop)
 	assert.Nil(t, err)
 	assert.Equal(t, "02:01:24:12;13", tc.String())
