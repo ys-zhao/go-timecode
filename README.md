@@ -1,8 +1,11 @@
 # SMPTETimecode
-This is golang library porting from Microsoft C# [SMPTETimecode](https://github.com/microsoftarchive/msdn-code-gallery-community-m-r/tree/master/Microsoft%20Media%20Platform%20Video%20Editor%20(formerly%20RCE)/%5BC%23%5D-Microsoft%20Media%20Platform%20Video%20Editor%20(formerly%20RCE)/C%23/code/SMPTETimecode)
+This is golang library porting from Microsoft C# [SMPTETimecode](https://github.com/microsoftarchive/msdn-code-gallery-community-m-r/tree/master/Microsoft%20Media%20Platform%20Video%20Editor%20(formerly%20RCE)/%5BC%23%5D-Microsoft%20Media%20Platform%20Video%20Editor%20(formerly%20RCE)/C%23/code/SMPTETimecode), with following updates:
+* Fixed the bugs in the original codes
+* Reenabled some ignored test cases
+* Added support for the new frame reate
 
 # Features
-- Support rates: Smpte239, Smpte24, Smpte25, Smpte2997Drop, Smpte2997NonDrop, Smpte30
+- Support rates: Smpte239, Smpte24, Smpte25, Smpte2997Drop, Smpte2997NonDrop, Smpte30, Smpte50, Smpte5994Drop, SmpteNonDrop, Smpte60, Smpte96, Smpte100, Smpte120
 
 # Installation
 To install SMPTETimecode, you can use "go get" command:
