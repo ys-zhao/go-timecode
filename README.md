@@ -95,3 +95,8 @@ func main() {
 	}
 }
 ```
+
+# Support
+If you like this project, and want to support me to maintaining the code base, you donate with following button.
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=LEE9LJYEZXQUU)
