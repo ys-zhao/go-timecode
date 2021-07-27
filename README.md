@@ -1,4 +1,4 @@
-# SMPTETimecode
+# go-smpte-timecode
 This is golang library porting from Microsoft C# [SMPTETimecode](https://github.com/microsoftarchive/msdn-code-gallery-community-m-r/tree/master/Microsoft%20Media%20Platform%20Video%20Editor%20(formerly%20RCE)/%5BC%23%5D-Microsoft%20Media%20Platform%20Video%20Editor%20(formerly%20RCE)/C%23/code/SMPTETimecode), with following updates:
 * Fixed the bugs in the original codes
 * Enabled some ignored test cases
