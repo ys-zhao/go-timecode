@@ -17,6 +17,7 @@
 namespace SMPTETimecode
 {
     using System;
+    using System.Collections.Generic;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
 
@@ -33,6 +34,34 @@ namespace SMPTETimecode
 #endif
     public partial struct TimeCode : IComparable, IComparable<TimeCode>, IEquatable<TimeCode>
     {
+        private struct rateRec
+        {
+            public int frames;
+            public int hours;
+            public int minutes;
+            public float rate;
+            public bool drop;
+            public float pcrTb;
+            public decimal max;
+        }
+
+        private static Dictionary<SmpteFrameRate, rateRec> _rateRecords = new Dictionary<SmpteFrameRate, rateRec>()
+        {
+            { SmpteFrameRate.Smpte2398,        new rateRec{frames= 24, hours= 86400, minutes= 1440, rate= 23.98F, drop= false, pcrTb= 3753.75F, max= 86486.358291666700000M}},
+            { SmpteFrameRate.Smpte24,          new rateRec{frames= 24, hours= 86400, minutes= 1440, rate= 24, drop= false, pcrTb= 3750, max= 86399.958333333300000M}},
+            { SmpteFrameRate.Smpte25, new rateRec{ frames = 25, hours = 90000, minutes = 1500, rate = 25, drop = false, pcrTb = 3600, max = 86399.960000000000000M}},
+            { SmpteFrameRate.Smpte2997Drop, new rateRec{ frames = 30, hours = 107892, minutes = 1798, rate = 29.97F, drop = true, pcrTb = 3003, max = 86399.880233333300000M}},
+            { SmpteFrameRate.Smpte2997NonDrop, new rateRec{ frames = 30, hours = 108000, minutes = 1800, rate = 29.97F, drop = false, pcrTb = 3003, max = 86486.366633333300000M}},
+            { SmpteFrameRate.Smpte30, new rateRec{ frames = 30, hours = 108000, minutes = 1800, rate = 30, drop = false, pcrTb = 3000, max = 86399.966666666700000M}},
+            { SmpteFrameRate.Smpte50, new rateRec{ frames = 50, hours = 180000, minutes = 3000, rate = 50, drop = false, max = 86399.980000000000000M}},
+            { SmpteFrameRate.Smpte5994Drop, new rateRec{ frames = 60, hours = 215784, minutes = 3596, rate = 59.94F, drop = true, max = 86399.896916666700000M}},
+            { SmpteFrameRate.Smpte5994NonDrop, new rateRec{ frames = 60, hours = 216000, minutes = 3600, rate = 59.94F, drop = false, max = 86486.383316670000000M}},
+            { SmpteFrameRate.Smpte60, new rateRec{ frames = 60, hours = 216000, minutes = 3600, rate = 60, drop = false, max = 86399.983333333300000M}},
+            { SmpteFrameRate.Smpte96, new rateRec{ frames = 96, hours = 345600, minutes = 5760, rate = 96, drop = false, max = 86399.983333333300000M}},
+            { SmpteFrameRate.Smpte100, new rateRec{ frames = 100, hours = 360000, minutes = 6000, rate = 100, drop = false, max = 86399.983333333300000M}},
+            { SmpteFrameRate.Smpte120, new rateRec{ frames = 120, hours = 432000, minutes = 7200, rate = 120, drop = false, max = 86399.983333333300000m}}
+        };
+
         /// <summary>
         /// Regular expression string used for parsing out the timecode.
         /// </summary>
@@ -140,49 +169,30 @@ namespace SMPTETimecode
         /// <param name="timeCodeAndRate">The SMPTE 12m time code string.</param>
         public TimeCode(string timeCodeAndRate)
         {
-            string[] timeAndRate = timeCodeAndRate.Split('@');
-
-            string time = string.Empty;
-            string rate = string.Empty;
+            var timeAndRate = timeCodeAndRate.Split('@');
+            var time = string.Empty;
+            var frameRate = 29.07;
+            var drop = timeAndRate[0].IndexOf(";", StringComparison.Ordinal) >= 0;
 
             if (timeAndRate.Length == 1)
             {
                 time = timeAndRate[0];
-                rate = "29.97";
             }
             else if (timeAndRate.Length == 2)
             {
                 time = timeAndRate[0];
-                rate = timeAndRate[1];
+                frameRate = float.Parse(timeAndRate[1]);
             }
-
+            // try to find match record
             this.frameRate = SmpteFrameRate.Smpte2997NonDrop;
-
-            if (rate == "29.97" && time.IndexOf(';') > -1)
+            foreach (var item in TimeCode._rateRecords)
             {
-                this.frameRate = SmpteFrameRate.Smpte2997Drop;
+                if (item.Value.rate == frameRate && item.Value.drop == drop)
+                {
+                    this.frameRate = item.Key;
+                    break;
+                }
             }
-            else if (rate == "29.97" && time.IndexOf(';') == -1)
-            {
-                this.frameRate = SmpteFrameRate.Smpte2997NonDrop;
-            }
-            else if (rate == "25")
-            {
-                this.frameRate = SmpteFrameRate.Smpte25;
-            }
-            else if (rate == "23.98")
-            {
-                this.frameRate = SmpteFrameRate.Smpte2398;
-            }
-            else if (rate == "24")
-            {
-                this.frameRate = SmpteFrameRate.Smpte24;
-            }
-            else if (rate == "30")
-            {
-                this.frameRate = SmpteFrameRate.Smpte30;
-            }
-
             this.absoluteTime = Smpte12mToAbsoluteTime(time, this.frameRate);
         }
 
@@ -516,31 +526,8 @@ namespace SMPTETimecode
             get
             {
                 long framecount = AbsoluteTimeToFrames(this.absoluteTime, this.frameRate);
-
-                double hours;
-
-                switch (this.frameRate)
-                {
-                    case SmpteFrameRate.Smpte2398:
-                    case SmpteFrameRate.Smpte24:
-                        hours = framecount / 86400D;
-                        break;
-                    case SmpteFrameRate.Smpte25:
-                        hours = framecount / 90000D;
-                        break;
-                    case SmpteFrameRate.Smpte2997Drop:
-                        hours = framecount / 107892D;
-                        break;
-                    case SmpteFrameRate.Smpte2997NonDrop:
-                    case SmpteFrameRate.Smpte30:
-                        hours = framecount / 108000D;
-                        break;
-                    default:
-                        hours = framecount / 108000D;
-                        break;
-                }
-
-                return hours;
+                var rec = _rateRecords[this.frameRate];
+                return (double)framecount / (double)rec.hours;
             }
         }
 
@@ -557,29 +544,8 @@ namespace SMPTETimecode
             get
             {
                 long framecount = AbsoluteTimeToFrames(this.absoluteTime, this.frameRate);
-
-                double minutes;
-
-                switch (this.frameRate)
-                {
-                    case SmpteFrameRate.Smpte2398:
-                    case SmpteFrameRate.Smpte24:
-                        minutes = framecount / 1400D;
-                        break;
-                    case SmpteFrameRate.Smpte25:
-                        minutes = framecount / 1500D;
-                        break;
-                    case SmpteFrameRate.Smpte2997Drop:
-                    case SmpteFrameRate.Smpte2997NonDrop:
-                    case SmpteFrameRate.Smpte30:
-                        minutes = framecount / 1800D;
-                        break;
-                    default:
-                        minutes = framecount / 1800D;
-                        break;
-                }
-
-                return minutes;
+                var rec = _rateRecords[this.frameRate];
+                return (double)framecount / (double)rec.minutes;
             }
         }
 
@@ -637,29 +603,7 @@ namespace SMPTETimecode
         /// <returns>The maximum TimeCode value for the given frame rate.</returns>
         public static decimal MaxValue(SmpteFrameRate frameRate)
         {
-            switch (frameRate)
-            {
-                case SmpteFrameRate.Smpte2398:
-                    return 86486.358291666700000M;
-
-                case SmpteFrameRate.Smpte24:
-                    return 86399.958333333300000M;
-
-                case SmpteFrameRate.Smpte25:
-                    return 86399.960000000000000M;
-
-                case SmpteFrameRate.Smpte2997Drop:
-                    return 86399.880233333300000M;
-
-                case SmpteFrameRate.Smpte2997NonDrop:
-                    return 86486.366633333300000M;
-
-                case SmpteFrameRate.Smpte30:
-                    return 86399.966666666700000M;
-
-                default:
-                    return 86399;
-            }
+            return _rateRecords[frameRate].max;
         }
 
         /// <summary>
@@ -836,23 +780,41 @@ namespace SMPTETimecode
         /// <returns>A SMPTE 12M formatted time code string.</returns>
         public static string Ticks27MhzToSmpte12M(long ticks27Mhz, SmpteFrameRate rate)
         {
+            var rec = _rateRecords[rate];
+            var pcrTb = Ticks27MhzToPcrTb(ticks27Mhz);
+            var frameCount = (pcrTb / rec.pcrTb);
+            var days = (int)((frameCount / rec.hours) / 24);
+            var hours = (int)((frameCount / rec.hours) % 24);
+            var frameCountHours = rec.hours * (hours + days * 24);
+            var dropFrame = false;
+            int minutes;
+            int seconds;
+            int frames;
+
             switch (rate)
             {
-                case SmpteFrameRate.Smpte2398:
-                    return Ticks27MhzToSmpte12M2398Fps(ticks27Mhz);
-                case SmpteFrameRate.Smpte24:
-                    return Ticks27MhzToSmpte12M24Fps(ticks27Mhz);
-                case SmpteFrameRate.Smpte25:
-                    return Ticks27MhzToSmpte12M25Fps(ticks27Mhz);
                 case SmpteFrameRate.Smpte2997Drop:
-                    return Ticks27MhzToSmpte12M_29_27_Drop(ticks27Mhz);
-                case SmpteFrameRate.Smpte2997NonDrop:
-                    return Ticks27MhzToSmpte12M_29_27_NonDrop(ticks27Mhz);
-                case SmpteFrameRate.Smpte30:
-                    return Ticks27MhzToSmpte12M_30fps(ticks27Mhz);
+                    minutes = (int)((frameCount + 2 * (int)((frameCount - frameCountHours) / 1800) - 2 * (int)((frameCount - frameCountHours) / 18000) - (frameCountHours)) / 1800) % 60;
+                    seconds = (int)((frameCount - (rec.minutes * minutes) - (2 * (int)(minutes / 10)) - (frameCountHours)) / rec.frames) % 3600;
+                    frames = (int)(frameCount - (rec.frames * seconds) - (rec.minutes * minutes) - (2 * (int)(minutes / 10)) - (frameCountHours)) % rec.frames;
+                    dropFrame = true;
+                    break;
+
+                case SmpteFrameRate.Smpte5994Drop:
+                    minutes = (int)((frameCount + (4 * (int)((frameCount - frameCountHours) / 3600)) - (4 * (int)((frameCount - frameCountHours) / 36000)) - (frameCountHours)) / 3600) % 60;
+                    seconds = (int)((frameCount - (rec.minutes * minutes) - (4 * (int)(minutes / 10)) - (frameCountHours)) / rec.frames) % 3600;
+                    frames = (int)(frameCount - (rec.frames * seconds) - (rec.minutes * minutes) - (4 * (int)(minutes / 10)) - (frameCountHours)) % rec.frames;
+                    dropFrame = true;
+                    break;
+
                 default:
-                    return Ticks27MhzToSmpte12M_30fps(ticks27Mhz);
+                    minutes = (int)((frameCount - frameCountHours) / rec.minutes) % 60;
+                    seconds = (int)((frameCount - (rec.minutes * minutes) - (frameCountHours)) / rec.frames) % 3600;
+                    frames = (int)(frameCount - (rec.frames * seconds) - (rec.minutes * minutes) - (frameCountHours)) % rec.frames;
+                    break;
             }
+
+            return FormatTimeCodeString(days, hours, minutes, seconds, frames, dropFrame);
         }
 
         /// <summary>
@@ -1132,22 +1094,37 @@ namespace SMPTETimecode
         /// <returns>A long that represents the value of the time code in 27Mhz ticks.</returns>
         public static long Smpte12MToTicks27Mhz(string timeCode, SmpteFrameRate rate)
         {
+            var rec = _rateRecords[rate];
+            var tc = new TimeCode(timeCode, rate);
+            //var days = tc.DaysSegment;
+            //var hours = tc.HoursSegment;
+            //var minutes = tc.MinutesSegment;
+            //var seconds = tc.SecondsSegment;
+            //var frames = tc.FramesSegment;
+
+            ParseTimecodeString(timeCode, out var days, out var hours, out var minutes, out var seconds, out var frames);
+
+            long ticksPcrTb;
+
             switch (rate)
             {
-                case SmpteFrameRate.Smpte2398:
-                    return Smpte12M2398FpsToTicks27Mhz(timeCode);
-                case SmpteFrameRate.Smpte24:
-                    return Smpte12M24FpsToTicks27Mhz(timeCode);
-                case SmpteFrameRate.Smpte25:
-                    return Smpte12M25FpsToTicks27Mhz(timeCode);
                 case SmpteFrameRate.Smpte2997Drop:
-                    return Smpte12M_29_27_DropToTicks27Mhz(timeCode);
-                case SmpteFrameRate.Smpte2997NonDrop:
-                    return Smpte12M_29_27_NonDropToTicks27Mhz(timeCode);
-                case SmpteFrameRate.Smpte30:
-                    return Smpte12M30FpsToTicks27Mhz(timeCode);
+                    ticksPcrTb = (3003 * frames) + (90090 * seconds) + (5399394 * minutes) + (6006 * (int)(seconds / 10D)) + (323999676 * hours) + (7775992224 * days);
+                    return ticksPcrTb * 300;
+
+                case SmpteFrameRate.Smpte5994Drop:
+                    ticksPcrTb = (6000 * frames) + (90090 * seconds) + (5399394 * minutes) + (12012 * (int)(seconds / 10D)) + (323999676 * hours) + (7775992224 * days);
+                    return ticksPcrTb * 300;
+
                 default:
-                    return Smpte12M30FpsToTicks27Mhz(timeCode);
+                    var valFrames = (double)rec.pcrTb;
+                    var valSeconds = (double)rec.pcrTb * rec.frames;
+                    var valMinutes = valSeconds * 60;
+                    var valHours = valMinutes * 60;
+                    var valDays = valHours * 24;
+
+                    ticksPcrTb = (long)((valFrames * frames) + (valSeconds * seconds) + (valMinutes * minutes) + (valHours * hours) + (valDays * days));
+                    return ticksPcrTb * 300;
             }
         }
 
@@ -1159,17 +1136,10 @@ namespace SMPTETimecode
         public static SmpteFrameRate ParseFramerate(double rate)
         {
             int rateRounded = (int)Math.Floor(rate);
-
-            switch (rateRounded)
+            foreach (var item in TimeCode._rateRecords)
             {
-                case 23: return SmpteFrameRate.Smpte2398;
-                case 24: return SmpteFrameRate.Smpte24;
-                case 25: return SmpteFrameRate.Smpte25;
-                case 29: return SmpteFrameRate.Smpte2997NonDrop;
-                case 30: return SmpteFrameRate.Smpte30;
-                case 50: return SmpteFrameRate.Smpte25;
-                case 60: return SmpteFrameRate.Smpte30;
-                case 59: return SmpteFrameRate.Smpte2997NonDrop;
+                if (item.Value.frames == rateRounded)
+                    return item.Key;
             }
 
             return SmpteFrameRate.Unknown;
@@ -1357,30 +1327,32 @@ namespace SMPTETimecode
         /// <returns>A <see cref="decimal"/> with the absolute time.</returns>
         private static decimal Smpte12mToAbsoluteTime(string timeCode, SmpteFrameRate rate)
         {
-            decimal absoluteTime = 0;
-
+            int days, hours, minutes, seconds, frames;
+            ParseTimecodeString(timeCode, out days, out hours, out minutes, out seconds, out frames);
+            // get record
+            var rec = _rateRecords[rate];
+            // check
+            if (frames >= rec.frames)
+                throw new FormatException($"Timecode frame value is not in the expected range for SMPTE {rec.frames}");
+            // get time
+            decimal absoluteTime = frames + (rec.frames * seconds) + (rec.minutes * minutes) + (rec.hours * hours) + (rec.hours * 24 * days);
             switch (rate)
             {
                 case SmpteFrameRate.Smpte2398:
-                    absoluteTime = Smpte12M_23_98_ToAbsoluteTime(timeCode);
-                    break;
-                case SmpteFrameRate.Smpte24:
-                    absoluteTime = Smpte12M_24_ToAbsoluteTime(timeCode);
-                    break;
-                case SmpteFrameRate.Smpte25:
-                    absoluteTime = Smpte12M_25_ToAbsoluteTime(timeCode);
-                    break;
-                case SmpteFrameRate.Smpte2997Drop:
-                    absoluteTime = Smpte12M_29_97_Drop_ToAbsoluteTime(timeCode);
-                    break;
                 case SmpteFrameRate.Smpte2997NonDrop:
-                    absoluteTime = Smpte12M_29_97_NonDrop_ToAbsoluteTime(timeCode);
+                case SmpteFrameRate.Smpte5994NonDrop:
+                case SmpteFrameRate.Smpte2997Drop:
+                case SmpteFrameRate.Smpte5994Drop:
+                    if (rate == SmpteFrameRate.Smpte2997Drop)
+                        absoluteTime += 2 * (minutes / 10);
+                    else if (rate == SmpteFrameRate.Smpte5994Drop)
+                        absoluteTime += 4 * (minutes / 10);
+                    absoluteTime = 1001M / 1000 / rec.frames * absoluteTime;
                     break;
-                case SmpteFrameRate.Smpte30:
-                    absoluteTime = Smpte12M_30_ToAbsoluteTime(timeCode);
+                default:
+                    absoluteTime = 1M / rec.frames * absoluteTime;
                     break;
             }
-
             return absoluteTime;
         }
 
@@ -1416,7 +1388,7 @@ namespace SMPTETimecode
             seconds = int.Parse(times[++index]);
             frames = int.Parse(times[++index]);
 
-            if ((days < 0) || (hours >= 24) || (minutes >= 60) || (seconds >= 60) || (frames >= 30))
+            if ((days < 0) || (hours >= 24) || (minutes >= 60) || (seconds >= 60)) // ingore frames || (frames >= 30))
             {
                 throw new FormatException(Smpte12MOutOfRange);
             }
@@ -1671,34 +1643,42 @@ namespace SMPTETimecode
         /// <returns>A string in SMPTE 12M format.</returns>
         private static string AbsoluteTimeToSmpte12M(decimal absoluteTime, SmpteFrameRate rate)
         {
-            string timeCode = string.Empty;
+            var rec = _rateRecords[rate];
+            var frameCount = AbsoluteTimeToFrames(absoluteTime, rate);
+            long days, hours, minutes, seconds, frames, frameCountHours;
+            var dropFrame = false;
 
-            if (rate == SmpteFrameRate.Smpte2398)
+            days = (frameCount / rec.hours) / 24;
+            hours = (frameCount / rec.hours) % 24;
+            frameCountHours = rec.hours * (hours + days * 24);
+            switch (rate)
             {
-                timeCode = AbsoluteTimeToSmpte12M_23_98fps(absoluteTime);
-            }
-            else if (rate == SmpteFrameRate.Smpte24)
-            {
-                timeCode = AbsoluteTimeToSmpte12M_24fps(absoluteTime);
-            }
-            else if (rate == SmpteFrameRate.Smpte25)
-            {
-                timeCode = AbsoluteTimeToSmpte12M_25fps(absoluteTime);
-            }
-            else if (rate == SmpteFrameRate.Smpte2997Drop)
-            {
-                timeCode = AbsoluteTimeToSmpte12M_29_97_Drop(absoluteTime);
-            }
-            else if (rate == SmpteFrameRate.Smpte2997NonDrop)
-            {
-                timeCode = AbsoluteTimeToSmpte12M_29_97_NonDrop(absoluteTime);
-            }
-            else if (rate == SmpteFrameRate.Smpte30)
-            {
-                timeCode = AbsoluteTimeToSmpte12M30Fps(absoluteTime);
-            }
+                case SmpteFrameRate.Smpte2997Drop:
+                    minutes = ((frameCount + (2 * (frameCount - frameCountHours) / 1800) - (2 * (frameCount - frameCountHours) / 18000) - (frameCountHours)) / 1800) % 60;
+                    seconds = ((frameCount - (rec.minutes * minutes) - (2 * (minutes / 10)) - (frameCountHours)) / rec.frames) % 3600;
+                    frames = (frameCount - (rec.frames * seconds) - (rec.minutes * minutes) - (2 * ((int)(minutes / (float)10))) - (frameCountHours)) % rec.frames;
+                    dropFrame = true;
+                    break;
 
-            return timeCode;
+                case SmpteFrameRate.Smpte5994Drop:
+                    minutes = ((frameCount + (4 * (frameCount - frameCountHours) / 3600) - (4 * (frameCount - frameCountHours) / 3600) - (frameCountHours)) / 3600) % 60;
+                    seconds = ((frameCount - (rec.minutes * minutes) - (4 * (minutes / 10)) - (frameCountHours)) / rec.frames) % 3600;
+                    frames = (frameCount - (rec.frames * seconds) - (rec.minutes * minutes) - (4 * ((int)(minutes / (float)(10)))) - (frameCountHours)) % rec.frames;
+                    dropFrame = true;
+                    break;
+
+                default:
+                    minutes = ((frameCount - frameCountHours) / rec.minutes) % 60;
+                    seconds = ((frameCount - (rec.minutes * minutes) - frameCountHours) / rec.frames) % 3600;
+                    frames = (frameCount - (rec.frames * seconds) - (rec.minutes * minutes) - frameCountHours) % rec.frames;
+                    break;
+            }
+            // reset times
+            minutes += seconds / 60; seconds %= 60;
+            hours += minutes / 60; minutes %= 60;
+            days += hours / 24; days %= 24;
+
+            return FormatTimeCodeString((int)days, (int)hours, (int)minutes, (int)seconds, (int)frames, dropFrame);
         }
 
         /// <summary>
@@ -1709,37 +1689,29 @@ namespace SMPTETimecode
         /// <returns>A <see cref="long"/> with the number of frames.</returns>
         private static long AbsoluteTimeToFrames(decimal absoluteTime, SmpteFrameRate rate)
         {
-            if (rate == SmpteFrameRate.Smpte2398)
+            var rec = _rateRecords[rate];
+            long ret = 0;
+
+            switch (rate)
             {
-                return Convert.ToInt64(decimal.Floor(decimal.Round((decimal)(24 * (float)(1000 / 1001M) * (float)(absoluteTime + EPSILON)), 25)));
+                case SmpteFrameRate.Smpte2398:
+                case SmpteFrameRate.Smpte2997Drop:
+                case SmpteFrameRate.Smpte2997NonDrop:
+                case SmpteFrameRate.Smpte5994Drop:
+                case SmpteFrameRate.Smpte5994NonDrop:
+                    ret = Convert.ToInt64(decimal.Floor(decimal.Round((decimal)(rec.frames * (float)(1000 / 1001M) * (float)(absoluteTime + EPSILON)), 25)));
+                    break;
+                case SmpteFrameRate.Smpte24:
+                case SmpteFrameRate.Smpte25:
+                    ret = Convert.ToInt64(decimal.Floor((decimal)(rec.frames * (float)absoluteTime)));
+                    break;
+
+                default:
+                    ret = Convert.ToInt64(rec.frames * absoluteTime);
+                    break;
             }
 
-            if (rate == SmpteFrameRate.Smpte24)
-            {
-                return Convert.ToInt64(decimal.Floor((decimal)(24 * (float)absoluteTime)));
-            }
-
-            if (rate == SmpteFrameRate.Smpte25)
-            {
-                return Convert.ToInt64(decimal.Floor((decimal)(25 * (float)absoluteTime)));
-            }
-
-            if (rate == SmpteFrameRate.Smpte2997Drop)
-            {
-                return Convert.ToInt64(decimal.Floor(decimal.Round((decimal)(30 * (float)(1000 / 1001M) * (float)(absoluteTime + EPSILON)), 25)));
-            }
-
-            if (rate == SmpteFrameRate.Smpte2997NonDrop)
-            {
-                return Convert.ToInt64(decimal.Floor(decimal.Round((decimal)(30 * (float)(1000 / 1001M) * (float)(absoluteTime + EPSILON)), 25)));
-            }
-
-            if (rate == SmpteFrameRate.Smpte30)
-            {
-                return Convert.ToInt64(30 * (float)absoluteTime);
-            }
-
-            return Convert.ToInt64(decimal.Floor(30 * absoluteTime));
+            return ret;
         }
 
         /// <summary>
@@ -1750,33 +1722,22 @@ namespace SMPTETimecode
         /// <returns>The absolute time.</returns>
         private static double FramesToAbsoluteTime(long frames, SmpteFrameRate rate)
         {
+            var rec = _rateRecords[rate];
             decimal absoluteTimeInDecimal;
 
-            if (rate == SmpteFrameRate.Smpte2398)
+            switch (rate)
             {
-                absoluteTimeInDecimal = frames / 24M / decimal.Round((1000 / 1001M), 11);
+                case SmpteFrameRate.Smpte2398:
+                case SmpteFrameRate.Smpte2997Drop:
+                case SmpteFrameRate.Smpte2997NonDrop:
+                case SmpteFrameRate.Smpte5994Drop:
+                case SmpteFrameRate.Smpte5994NonDrop:
+                    absoluteTimeInDecimal = (decimal)frames / rec.frames / decimal.Round((1000 / 1001M), 11);
+                    break;
+                default:
+                    absoluteTimeInDecimal = frames / (decimal)rec.frames;
+                    break;
             }
-            else if (rate == SmpteFrameRate.Smpte24)
-            {
-                absoluteTimeInDecimal = frames / 24M;
-            }
-            else if (rate == SmpteFrameRate.Smpte25)
-            {
-                absoluteTimeInDecimal = frames / 25M;
-            }
-            else if (rate == SmpteFrameRate.Smpte2997Drop || rate == SmpteFrameRate.Smpte2997NonDrop)
-            {
-                absoluteTimeInDecimal = frames / 30M / decimal.Round((1000 / 1001M), 11);
-            }
-            else if (rate == SmpteFrameRate.Smpte30)
-            {
-                absoluteTimeInDecimal = frames / 30M;
-            }
-            else
-            {
-                absoluteTimeInDecimal = frames / 30M;
-            }
-
             return Convert.ToDouble(absoluteTimeInDecimal);
         }
 

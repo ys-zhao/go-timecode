@@ -630,7 +630,6 @@ namespace SMPTETimecode.Tests
 
         [TestMethod]
         [ExpectedException(typeof(OverflowException))]
-        [Ignore]
         public void SubtractPastMinValue()
         {
             TimeCode timecode1 = new TimeCode(0, 0, 0, 1, SmpteFrameRate.Smpte2997NonDrop);
@@ -1053,7 +1052,6 @@ namespace SMPTETimecode.Tests
         /// Knows the absolute time is valid.
         /// </summary>
         [TestMethod]
-        [Ignore]
         public void KnownAbsoluteTimeIsValid_14()
         {
             const long Known27Mhz = 43443649200;

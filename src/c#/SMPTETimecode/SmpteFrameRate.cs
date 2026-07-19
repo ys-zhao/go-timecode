@@ -60,6 +60,26 @@ namespace SMPTETimecode
         /// </summary>
         Smpte30 = 5,
 
+        Smpte50 = 6,
+
+        // Smpte5994Drop 59.94 fps Drop Frame timecode. Used in the NTSC television system.
+        Smpte5994Drop = 7,
+
+        // Smpte5994NonDrop 59.94 fps Non Drop Fram timecode. Used in the NTSC television system.
+        Smpte5994NonDrop = 8,
+
+        // Smpte60 60 fps frame rate.
+        Smpte60 = 9,
+
+        // Smpte96 96 fps frame rate.
+        Smpte96 = 10,
+
+        // Smpte100 100 fps frame rate.
+        Smpte100 = 11,
+
+        // Smpte120 120 fps frame rate.
+        Smpte120 = 12,
+
         /// <summary>
         /// UnKnown Value.
         /// </summary>
